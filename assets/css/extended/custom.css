@@ -1,0 +1,23 @@
+/* Responsive tables */
+.post-content table {
+  display: block;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  white-space: nowrap;
+}
+
+.post-content thead th {
+  background-color: var(--code-bg);
+  font-weight: 600;
+}
+
+.post-content td,
+.post-content th {
+  padding: 8px 12px;
+}
+
+@media (max-width: 768px) {
+  .post-content table {
+    font-size: 0.9em;
+  }
+}
