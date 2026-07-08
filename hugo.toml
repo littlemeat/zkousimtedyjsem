@@ -7,6 +7,7 @@ timeZone = "Europe/Prague"
 [params]
   env = "production"
   description = "Osobní blog Marie — na čem pracuju, co testuju a kam cestuju. Zkouším, tedy jsem."
+  DateFormat = "2. 1. 2006"
   mainSections = ["posts"]
   ShowReadingTime = true
   ShowBreadCrumbs = true
