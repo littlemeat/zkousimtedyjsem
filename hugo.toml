@@ -2,21 +2,24 @@ baseURL = "https://zkousimtedyjsem.cz/"
 languageCode = "cs"
 title = "Zkouším, tedy jsem"
 theme = "PaperMod"
+timeZone = "Europe/Prague"
 
 [params]
   env = "production"
-  description = "Nezávislé srovnání doplňků stravy. Zkoušíme, testujeme a srovnáváme — abyste nemuseli."
+  description = "Osobní blog Marie — na čem pracuju, co testuju a kam cestuju. Zkouším, tedy jsem."
+  mainSections = ["posts"]
   ShowReadingTime = true
   ShowBreadCrumbs = true
   ShowPostNavLinks = true
   ShowShareButtons = false
+  ShowCodeCopyButtons = true
   ShowToc = true
-  TocOpen = true
+  TocOpen = false
   defaultTheme = "auto"
 
   [params.homeInfoParams]
     Title = "Zkouším, tedy jsem"
-    Content = "Nezávislé srovnání doplňků stravy. Zkoušíme, testujeme a srovnáváme — abyste nemuseli."
+    Content = "Ahoj, jsem Marie. Píšu si tady o tom, na čem pracuju, co testuju a kam cestuju — od kódu přes šití a doplňky stravy až po výlety."
 
   [params.fuseOpts]
     isCaseSensitive = false
@@ -26,9 +29,6 @@ theme = "PaperMod"
     threshold = 0.4
     minMatchCharLength = 0
     keys = ["title", "permalink", "summary", "content"]
-
-  [params.footer]
-    text = "Tento web obsahuje affiliate odkazy."
 
   [params.label]
     text = "Zkouším, tedy jsem"
@@ -40,28 +40,40 @@ theme = "PaperMod"
   weight = 10
 
 [[menu.main]]
-  identifier = "srovnani"
-  name = "Srovnání"
-  url = "/srovnani/"
+  identifier = "clanky"
+  name = "Články"
+  url = "/posts/"
   weight = 20
 
 [[menu.main]]
-  identifier = "o-webu"
-  name = "O webu"
-  url = "/o-webu/"
+  identifier = "pracuju"
+  name = "Pracuju"
+  url = "/categories/pracuju/"
   weight = 30
 
 [[menu.main]]
-  identifier = "affiliate-prohlaseni"
-  name = "Affiliate prohlášení"
-  url = "/affiliate-prohlaseni/"
+  identifier = "testuju"
+  name = "Testuju"
+  url = "/categories/testuju/"
   weight = 40
+
+[[menu.main]]
+  identifier = "cestuju"
+  name = "Cestuju"
+  url = "/categories/cestuju/"
+  weight = 50
+
+[[menu.main]]
+  identifier = "o-mne"
+  name = "O mně"
+  url = "/o-mne/"
+  weight = 60
 
 [[menu.main]]
   identifier = "search"
   name = "Hledat"
   url = "/search/"
-  weight = 50
+  weight = 70
 
 [outputs]
   home = ["HTML", "RSS", "JSON"]

@@ -1,23 +1,17 @@
 ---
 title: "Affiliate prohlášení"
-description: "Informace o affiliate odkazech na webu Zkouším, tedy jsem."
+description: "Jak fungují affiliate odkazy na blogu Zkouším, tedy jsem."
 ShowToc: false
 ---
 
-## Affiliate odkazy
-
-Tento web obsahuje affiliate odkazy. To znamená, že pokud kliknete na odkaz a provedete nákup, mohu získat malou provizi od prodejce.
+Některé články na tomhle blogu obsahují affiliate odkazy. Když přes takový odkaz nakoupíte, dostanu od obchodu malou provizi.
 
 ## Co to pro vás znamená
 
-- **Cena se nemění** — nákupem přes affiliate odkaz neplatíte nic navíc
-- **Nezávislost recenzí** — affiliate spolupráce nemá vliv na hodnocení produktů
-- **Vlastní výběr** — produkty k recenzi si vybírám sám/sama, nikdo mi neplatí za pozitivní hodnocení
+- **Cena se nemění** — nákupem přes affiliate odkaz nezaplatíte nic navíc
+- **Píšu jen o tom, co sama používám** — produkty si kupuju sama a odkazuju na ně proto, že o nich zrovna píšu, ne naopak
+- **Vždy to poznáte** — každý článek, který affiliate odkazy obsahuje, má na konci upozornění
 
-## Proč affiliate odkazy
+## Proč to dělám
 
-Provize z affiliate odkazů pomáhají pokrýt náklady na provoz webu a nákup produktů k testování. Díky tomu mohu pokračovat v tvorbě nezávislých srovnání.
-
-## Transparentnost
-
-U každého článku, který obsahuje affiliate odkazy, najdete upozornění. Transparentnost je pro mě priorita — chci, abyste věděli, jak tento web funguje a jak je financován.
+Provize pomáhají pokrýt náklady na provoz blogu — doménu a věci, které testuju. Na moje hodnocení nemají vliv: když mi něco nefunguje, napíšu to.
