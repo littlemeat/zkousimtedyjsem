@@ -2,3 +2,6 @@ public/
 resources/
 .hugo_build.lock
 .DS_Store
+
+# Podklady k článkům — nikdy necommitovat (repo je veřejné)
+_ARTICLE-INSPO/
