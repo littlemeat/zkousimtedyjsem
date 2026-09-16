@@ -373,7 +373,11 @@ body {
   color: var(--primary);
 }
 
-.paginav a:hover span:not(.title) {
+/* PaperMod má vlastní `.paginav span:hover:not(.title)` s podtržením o výchozí
+   tloušťce. Kdyby se uplatnilo, lišil by se vzhled podle toho, jestli je kurzor
+   přímo na textu, nebo jen v odkazu. Obě varianty proto stylujeme stejně. */
+.paginav a:hover span:not(.title),
+.paginav span:hover:not(.title) {
   text-decoration: underline;
   text-underline-offset: 3px;
   text-decoration-thickness: 1px;
