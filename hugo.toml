@@ -16,7 +16,8 @@ timeZone = "Europe/Prague"
   ShowCodeCopyButtons = true
   ShowToc = true
   TocOpen = false
-  defaultTheme = "auto"
+  defaultTheme = "light"
+  disableThemeToggle = true
 
   [params.homeInfoParams]
     Title = "Zkouším, tedy jsem"
@@ -46,23 +47,23 @@ timeZone = "Europe/Prague"
   url = "/posts/"
   weight = 20
 
-[[menu.main]]
-  identifier = "pracuju"
-  name = "Pracuju"
-  url = "/categories/pracuju/"
-  weight = 30
+# [[menu.main]]
+#   identifier = "pracuju"
+#   name = "Pracuju"
+#   url = "/categories/pracuju/"
+#   weight = 30
 
-[[menu.main]]
-  identifier = "testuju"
-  name = "Testuju"
-  url = "/categories/testuju/"
-  weight = 40
+# [[menu.main]]
+#   identifier = "testuju"
+#   name = "Testuju"
+#   url = "/categories/testuju/"
+#   weight = 40
 
-[[menu.main]]
-  identifier = "cestuju"
-  name = "Cestuju"
-  url = "/categories/cestuju/"
-  weight = 50
+# [[menu.main]]
+#   identifier = "cestuju"
+#   name = "Cestuju"
+#   url = "/categories/cestuju/"
+#   weight = 50
 
 [[menu.main]]
   identifier = "o-mne"
@@ -70,11 +71,11 @@ timeZone = "Europe/Prague"
   url = "/o-mne/"
   weight = 60
 
-[[menu.main]]
-  identifier = "search"
-  name = "Hledat"
-  url = "/search/"
-  weight = 70
+# [[menu.main]]
+#   identifier = "search"
+#   name = "Hledat"
+#   url = "/search/"
+#   weight = 70
 
 [outputs]
   home = ["HTML", "RSS", "JSON"]

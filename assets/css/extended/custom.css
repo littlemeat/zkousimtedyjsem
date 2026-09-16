@@ -1,23 +1,339 @@
-/* Responsive tables */
+/* ==========================================================================
+   Vzhled blogu: klidná editoriální typografie, serif na čtení, sans na chrome.
+   Světlý režim natvrdo — .dark dostává stejné hodnoty, aby se web nepřepnul
+   ani u návštěvníka, který má v prohlížeči uloženou starou volbu.
+   ========================================================================== */
+
+:root,
+body.dark {
+  color-scheme: light;
+
+  --theme: #ffffff;
+  --entry: #ffffff;
+  --primary: #1f1f1f;          /* nadpisy a hlavní text */
+  --secondary: #6b6b6b;        /* data, popisky, meta */
+  --tertiary: #ececec;         /* jemné linky */
+  --content: #262626;          /* tělo článku */
+  --border: #e9e9e9;
+  --code-bg: #f6f6f4;
+  --code-block-bg: #1f2024;
+
+  --main-width: 700px;
+  --gap: 24px;
+  --radius: 4px;
+
+  --font-ui: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-read: "Source Serif 4", Charter, Georgia, "Times New Roman", serif;
+}
+
+body {
+  font-family: var(--font-ui);
+  background: var(--theme);
+  color: var(--primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* PaperMod dává výpisovým stránkám šedavé pozadí — chceme bílo všude */
+.list,
+[data-theme="dark"] .list {
+  background: var(--theme);
+}
+
+/* ---------- hlavička ---------- */
+
+.header {
+  border-bottom: 1px solid var(--border);
+}
+
+.nav {
+  padding-inline: var(--gap);
+}
+
+#menu a,
+.logo a {
+  font-family: var(--font-ui);
+}
+
+.logo a {
+  font-size: 1.3rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+#menu li a {
+  font-size: 0.95rem;
+  font-weight: 400;
+  color: var(--secondary);
+  padding: 4px 0;
+  border-bottom: 1px solid transparent;
+}
+
+#menu li a:hover,
+#menu .active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+
+/* ---------- úvodní stránka ---------- */
+
+.home-info .entry-content,
+.first-entry .entry-content {
+  font-family: var(--font-read);
+  font-size: 1.15rem;
+  line-height: 1.6;
+  color: var(--secondary);
+}
+
+.first-entry .entry-header h1 {
+  font-size: 2.6rem;
+  letter-spacing: -0.035em;
+  line-height: 1.12;
+}
+
+/* výpis článků: místo karet klidné oddělovače */
+.post-entry,
+.first-entry {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 28px 0;
+}
+
+.post-entry {
+  border-bottom: 1px solid var(--border);
+}
+
+.post-entry:hover {
+  background: transparent;
+  transform: none;
+}
+
+.post-entry .entry-header h2 {
+  font-size: 1.55rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.25;
+  color: var(--primary);
+}
+
+.post-entry .entry-content {
+  font-family: var(--font-read);
+  font-size: 1.02rem;
+  line-height: 1.6;
+  color: var(--secondary);
+  margin: 10px 0;
+  -webkit-line-clamp: 3;
+}
+
+.entry-footer {
+  font-size: 0.85rem;
+  color: var(--secondary);
+}
+
+/* ---------- článek ---------- */
+
+.post-header {
+  margin: 40px auto 28px;
+}
+
+.post-title {
+  font-size: 2.6rem;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1.15;
+  margin-bottom: 12px;
+}
+
+.post-description {
+  font-family: var(--font-read);
+  font-size: 1.2rem;
+  font-style: normal;
+  line-height: 1.5;
+  color: var(--secondary);
+  margin-bottom: 14px;
+}
+
+.post-meta {
+  font-size: 0.87rem;
+  color: var(--secondary);
+}
+
+.post-content {
+  font-family: var(--font-read);
+  font-size: 1.24rem;
+  line-height: 1.72;
+  letter-spacing: -0.002em;
+  color: var(--content);
+}
+
+.post-content p {
+  margin: 1.4em 0;
+}
+
+.post-content h1,
+.post-content h2,
+.post-content h3,
+.post-content h4 {
+  font-family: var(--font-ui);
+  font-weight: 600;
+  letter-spacing: -0.028em;
+  line-height: 1.25;
+}
+
+.post-content h2 {
+  font-size: 1.62rem;
+  margin: 2.1em 0 0.6em;
+}
+
+.post-content h3 {
+  font-size: 1.28rem;
+  margin: 1.8em 0 0.5em;
+}
+
+.post-content h4 {
+  font-size: 1.1rem;
+  margin: 1.6em 0 0.4em;
+}
+
+.post-content a {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--secondary);
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  box-shadow: none;
+}
+
+.post-content a:hover {
+  text-decoration-color: var(--primary);
+}
+
+.post-content ul,
+.post-content ol {
+  margin: 1.2em 0;
+  padding-inline-start: 1.4em;
+}
+
+.post-content li {
+  margin: 0.5em 0;
+}
+
+.post-content li::marker {
+  color: var(--secondary);
+}
+
+.post-content blockquote {
+  border-inline-start: 3px solid var(--primary);
+  margin: 1.8em 0;
+  padding: 0.1em 0 0.1em 1.2em;
+  font-style: italic;
+  color: var(--content);
+}
+
+.post-content hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 2.6em auto;
+  width: 120px;
+}
+
+.post-content img {
+  border-radius: 2px;
+  margin: 0.4em auto;
+}
+
+/* Popisek fotky. Publikovaný markdown má obrázek a kurzívu na dvou řádcích
+   bez prázdného řádku mezi nimi, takže skončí ve stejném odstavci. */
+.post-content p > img {
+  display: block;
+}
+
+.post-content p:has(> img) > em,
+.post-content p:has(> img) + p > em:only-child {
+  display: block;
+  margin-top: 0.7em;
+  text-align: center;
+  font-family: var(--font-ui);
+  font-size: 0.87rem;
+  font-style: normal;
+  line-height: 1.45;
+  color: var(--secondary);
+}
+
+.post-content code {
+  font-size: 0.86em;
+  background: var(--code-bg);
+  border-radius: 3px;
+  padding: 2px 5px;
+}
+
+.post-content pre {
+  border-radius: var(--radius);
+}
+
+.post-content pre code {
+  font-size: 0.9rem;
+  background: transparent;
+}
+
+/* čísla stránek, navigace mezi články, patička */
+.pagination .page-link,
+.post-nav-links .prev,
+.post-nav-links .next,
+.footer {
+  font-family: var(--font-ui);
+  font-size: 0.87rem;
+  color: var(--secondary);
+}
+
+.footer {
+  border-top: 1px solid var(--border);
+  margin-top: 40px;
+}
+
+/* ---------- tabulky ---------- */
+
 .post-content table {
   display: block;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   white-space: nowrap;
+  font-family: var(--font-ui);
+  font-size: 0.94rem;
+  margin: 1.8em 0;
 }
 
 .post-content thead th {
-  background-color: var(--code-bg);
+  background: transparent;
+  border-bottom: 2px solid var(--primary);
   font-weight: 600;
 }
 
 .post-content td,
 .post-content th {
-  padding: 8px 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
 }
 
+/* ---------- mobil ---------- */
+
 @media (max-width: 768px) {
+  .post-content {
+    font-size: 1.12rem;
+    line-height: 1.68;
+  }
+
+  .post-title,
+  .first-entry .entry-header h1 {
+    font-size: 1.95rem;
+  }
+
+  .post-description {
+    font-size: 1.05rem;
+  }
+
   .post-content table {
-    font-size: 0.9em;
+    font-size: 0.88rem;
   }
 }
