@@ -1,0 +1,37 @@
+{{- /* Hlavička se při rolování dolů skryje a při rolování nahoru se vrátí.
+       Na čtecím webu tím článek nepřijde o šířku ani výšku, ale navigace je
+       pořád na jedno gesto. Kdo má vypnuté animace, dostane jen přilepenou lištu. */ -}}
+<script>
+(function () {
+  var header = document.querySelector('.header');
+  if (!header) return;
+
+  var tichyRezim = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var posledni = window.scrollY;
+  var ceka = false;
+
+  function prekresli() {
+    var y = window.scrollY;
+
+    header.classList.toggle('header--compact', y > 8);
+
+    if (!tichyRezim) {
+      var dolu = y > posledni;
+      // pod hranicí se hlavička neskrývá, ať neposkakuje hned na začátku stránky
+      header.classList.toggle('header--skryta', dolu && y > 160);
+    }
+
+    posledni = y;
+    ceka = false;
+  }
+
+  window.addEventListener('scroll', function () {
+    if (!ceka) {
+      ceka = true;
+      window.requestAnimationFrame(prekresli);
+    }
+  }, { passive: true });
+
+  prekresli();
+})();
+</script>

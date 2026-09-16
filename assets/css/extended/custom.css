@@ -47,8 +47,37 @@ body {
 
 /* ---------- hlavička ---------- */
 
+/* Přilepená lišta, která při rolování dolů uhne a při rolování nahoru se vrátí.
+   Výška zůstává pořád stejná: zmenšování lišty mění její výšku, a protože je
+   v toku stránky, obsah pod ní o ten rozdíl poskočí. Mění se proto jen linka
+   pod lištou; samotné schování jede přes transform, který s tokem nehýbá.
+   Stavy `--compact` a `--skryta` přepíná skript v extend_footer.html. */
 .header {
-  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--theme);
+  border-bottom: 1px solid transparent;
+  transition: transform 0.25s ease, border-color 0.2s ease;
+}
+
+.header--compact {
+  border-bottom-color: var(--border);
+}
+
+.header--skryta {
+  transform: translateY(-100%);
+}
+
+/* Ať odkaz na nadpis nezajede pod přilepenou lištu. */
+html {
+  scroll-padding-top: 72px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .header {
+    transition: none;
+  }
 }
 
 #menu a,
