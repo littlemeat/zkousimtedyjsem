@@ -267,10 +267,36 @@ html {
   text-decoration-thickness: 1px;
 }
 
-/* značka rozepsaného článku — má být poznat, ne křičet */
+/* Značka rozepsaného článku. Na produkci se drafty vůbec nesestaví, takže
+   tenhle štítek uvidí jen Marie v lokálním náhledu — proto smí křičet.
+   Původní tužku schováváme a nahrazujeme ji čitelným štítkem. */
 .entry-hint {
-  color: var(--secondary);
-  opacity: 0.4;
+  opacity: 1;
+  display: inline-flex;
+  align-items: center;
+  align-self: center;   /* nadpis je flex, jinak se štítek roztáhne přes dva řádky */
+  flex: 0 0 auto;
+  line-height: 1.4;
+  vertical-align: middle;
+  margin-inline-start: 12px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #d14524;
+  color: #fff;
+  font-family: var(--font-ui);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.entry-hint svg {
+  display: none;
+}
+
+.entry-hint::after {
+  content: "Rozepsané";
 }
 
 .page-header h1 {
