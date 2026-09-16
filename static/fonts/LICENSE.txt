@@ -1,0 +1,8 @@
+Písma v této složce jsou zde uložena v souladu s licencí SIL Open Font
+License 1.1, která ukládá distribuovat je i s licenčním textem.
+
+Inter — © The Inter Project Authors (https://github.com/rsms/inter)
+Source Serif 4 — © 2014-2023 Adobe (http://www.adobe.com/)
+
+Plné znění licence obou písem je v souborech inter-LICENSE.txt
+a source-serif-4-LICENSE.txt v této složce.

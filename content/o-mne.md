@@ -2,6 +2,8 @@
 title: "O mně"
 description: "Kdo píše blog Zkouším, tedy jsem a proč."
 ShowToc: false
+ShowBreadCrumbs: false
+ShowReadingTime: false
 aliases: ["/o-webu/"]
 ---
 

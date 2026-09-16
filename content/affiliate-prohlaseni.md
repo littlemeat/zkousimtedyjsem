@@ -2,6 +2,8 @@
 title: "Affiliate prohlášení"
 description: "Jak fungují affiliate odkazy na blogu Zkouším, tedy jsem."
 ShowToc: false
+ShowBreadCrumbs: false
+ShowReadingTime: false
 ---
 
 Některé články na tomhle blogu obsahují affiliate odkazy. Když přes takový odkaz nakoupíte, dostanu od obchodu malou provizi.

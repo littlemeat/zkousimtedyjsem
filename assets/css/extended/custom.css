@@ -14,16 +14,21 @@ body.dark {
   --secondary: #6f6a61;        /* data, popisky, meta */
   --tertiary: #e4ded1;         /* jemné linky */
   --content: #2a2823;          /* tělo článku */
-  --border: #e6e0d3;
+  --border: #ddd5c4;           /* linky musí být vidět i na jasu */
   --code-bg: #f2ede1;
-  --code-block-bg: #1f2024;
+  --code-block-bg: #26231f;    /* teplá tmavá, ne studená modročerná */
+
+  --secondary-strong: #57524a; /* sekundární text určený ke čtení (perex) */
+  --accent: #8a5a3c;           /* teplý inkoust — jediná barva na webu, jen odkazy */
 
   --main-width: 700px;
+  --nav-width: 700px;   /* hlavička má mít stejnou levou hranu jako text */
   --gap: 24px;
   --radius: 4px;
 
   --font-ui: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-read: "Source Serif 4", Charter, Georgia, "Times New Roman", serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
 }
 
 body {
@@ -107,13 +112,30 @@ body {
   padding: 28px 0;
 }
 
-.post-entry {
-  border-bottom: 1px solid var(--border);
+.first-entry {
+  min-height: 0;
+  padding: 32px 0 8px;
 }
 
+.post-entry {
+  border-bottom: 1px solid var(--border);
+  padding: 34px 0;
+}
+
+/* Karty jsme zrušili, ale řádek je celý klikací — musí to být poznat. */
 .post-entry:hover {
   background: transparent;
   transform: none;
+}
+
+.post-entry:hover .entry-header h2 {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}
+
+.post-entry:last-of-type {
+  border-bottom: 0;
 }
 
 .post-entry .entry-header h2 {
@@ -168,10 +190,10 @@ body {
 
 .post-description {
   font-family: var(--font-read);
-  font-size: 1.2rem;
+  font-size: 1.35rem;
   font-style: normal;
-  line-height: 1.5;
-  color: var(--secondary);
+  line-height: 1.45;
+  color: var(--secondary-strong);
   margin-bottom: 14px;
 }
 
@@ -203,31 +225,34 @@ body {
 }
 
 .post-content h2 {
-  font-size: 1.62rem;
-  margin: 2.1em 0 0.6em;
+  font-size: 1.75rem;
+  margin: 2.8em 0 0.6em;
 }
 
 .post-content h3 {
-  font-size: 1.28rem;
-  margin: 1.8em 0 0.5em;
+  font-size: 1.4rem;
+  margin: 2em 0 0.5em;
 }
 
+/* Nejnižší úroveň odlišuje hlavně váha a proložení; velikost ale nesmí
+   klesnout pod tělo textu, jinak se nadpis nečte jako nadpis. */
 .post-content h4 {
-  font-size: 1.1rem;
-  margin: 1.6em 0 0.4em;
+  font-size: 1.25rem;
+  letter-spacing: 0.02em;
+  margin: 1.7em 0 0.4em;
 }
 
 .post-content a {
-  color: inherit;
+  color: var(--accent);
   text-decoration: underline;
-  text-decoration-color: var(--secondary);
+  text-decoration-color: rgba(138, 90, 60, 0.35);
   text-underline-offset: 3px;
   text-decoration-thickness: 1px;
   box-shadow: none;
 }
 
 .post-content a:hover {
-  text-decoration-color: var(--primary);
+  text-decoration-color: var(--accent);
 }
 
 .post-content ul,
@@ -244,13 +269,28 @@ body {
   color: var(--secondary);
 }
 
+/* Odrážka i nativní checkbox vedle sebe = dvojitá značka. */
+.post-content ul:has(input[type="checkbox"]) {
+  list-style: none;
+  padding-inline-start: 0;
+}
+
+.post-content input[type="checkbox"] {
+  accent-color: var(--secondary);
+  margin-inline-end: 0.5em;
+}
+
 .post-content blockquote {
-  border-inline-start: 3px solid var(--primary);
+  border-inline-start: 2px solid #cfc5ae;
   margin: 1.8em 0;
   padding: 0.1em 0 0.1em 1.2em;
   font-style: italic;
   color: var(--content);
 }
+
+/* Vnitřní odstavec si drží margin, kvůli kterému linka plave nad i pod text. */
+.post-content blockquote p:first-child { margin-top: 0; }
+.post-content blockquote p:last-child { margin-bottom: 0; }
 
 .post-content hr {
   border: 0;
@@ -262,6 +302,7 @@ body {
 .post-content img {
   border-radius: 2px;
   margin: 0.4em auto;
+  box-shadow: 0 0 0 1px rgba(31, 29, 26, 0.07);
 }
 
 /* Popisek fotky. Publikovaný markdown má obrázek a kurzívu na dvou řádcích
@@ -283,19 +324,24 @@ body {
 }
 
 .post-content code {
+  font-family: var(--font-mono);
   font-size: 0.86em;
   background: var(--code-bg);
   border-radius: 3px;
-  padding: 2px 5px;
+  padding: 0.1em 0.35em;   /* větší padding nafukoval řádkový proklad */
 }
 
 .post-content pre {
   border-radius: var(--radius);
+  overflow: auto;
 }
 
 .post-content pre code {
+  display: block;
+  font-family: var(--font-mono);
   font-size: 0.9rem;
   background: transparent;
+  padding: 16px 18px;
 }
 
 /* ---------- štítky a přechod na další článek ---------- */
@@ -312,7 +358,7 @@ body {
   line-height: 1.5;
   font-family: var(--font-ui);
   font-size: 0.85rem;
-  color: var(--secondary);
+  color: var(--secondary-strong);
   background: transparent;
   border: 0;
   border-radius: 0;
@@ -343,6 +389,17 @@ body {
   flex: 1 1 0;
   padding: 0;
   display: block;
+}
+
+/* PaperMod dává sloupcům width:50% a pravému margin-inline-start:auto —
+   u nejnovějšího článku (kde je jen „Další“) pak půlka pruhu zeje prázdnotou. */
+.paginav .prev,
+.paginav .next {
+  width: auto;
+}
+
+.paginav .next {
+  margin-inline-start: 0;
 }
 
 .paginav a:hover {
@@ -409,20 +466,63 @@ body {
 }
 
 .footer {
+  max-width: calc(var(--main-width) + var(--gap) * 2);
+  margin: 72px auto 0;
+  padding: 26px var(--gap) 44px;
   border-top: 1px solid var(--border);
-  margin-top: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  text-align: start;
+}
+
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.footer-links a {
+  color: var(--secondary-strong);
+  font-size: 0.9rem;
+}
+
+.footer-links a:hover {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+
+.footer-meta {
+  font-size: 0.8rem;
+  color: var(--secondary);
+}
+
+.footer-meta a {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--tertiary);
+  text-underline-offset: 2px;
 }
 
 /* ---------- tabulky ---------- */
 
 .post-content table {
   display: block;
-  overflow-x: auto;
+  width: 100%;
+  min-width: 100%;
+  overflow-x: auto;           /* jen pojistka pro široké tabulky */
   -webkit-overflow-scrolling: touch;
-  white-space: nowrap;
+  white-space: normal;        /* nowrap smrskával krátkou tabulku do levé půlky */
   font-family: var(--font-ui);
-  font-size: 0.94rem;
+  font-size: 1rem;
   margin: 1.8em 0;
+}
+
+.post-content th {
+  white-space: nowrap;
 }
 
 .post-content thead th {
@@ -450,11 +550,42 @@ body {
     font-size: 1.95rem;
   }
 
+  /* Nadpisy se musely zmenšit taky, jinak splynou s titulkem článku. */
+  .post-content h2 {
+    font-size: 1.4rem;
+  }
+
+  .post-content h3 {
+    font-size: 1.18rem;
+  }
+
   .post-description {
-    font-size: 1.05rem;
+    font-size: 1.15rem;
   }
 
   .post-content table {
-    font-size: 0.88rem;
+    font-size: 0.92rem;
+  }
+
+  /* Položky menu potřebují na dotyk větší cíl. */
+  #menu li a {
+    padding: 10px 0;
+  }
+
+  /* Tlačítko „nahoru“ leželo přes text a na telefonu ho nikdo nepotřebuje. */
+  .top-link {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Na 375 px zbývalo ~37 znaků na řádek, čeština se pak seká. */
+  .main {
+    padding-inline: 18px;
+  }
+
+  .post-content {
+    font-size: 1.06rem;
+    line-height: 1.62;
   }
 }

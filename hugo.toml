@@ -15,8 +15,7 @@ titleCaseStyle = "none"  # nepřepisovat štítky na Velká Písmena
   ShowPostNavLinks = true
   ShowShareButtons = false
   ShowCodeCopyButtons = true
-  ShowToc = true
-  TocOpen = false
+  ShowToc = false
   defaultTheme = "light"
   disableThemeToggle = true
 
