@@ -69,9 +69,16 @@ body {
   transform: translateY(-100%);
 }
 
-/* Ať odkaz na nadpis nezajede pod přilepenou lištu. */
+/* Ať odkaz na nadpis nezajede pod přilepenou lištu. Pod ~500 px se lišta láme
+   na dva řádky a měří 117 px, takže tam potřebuje větší rezervu. */
 html {
   scroll-padding-top: 72px;
+}
+
+@media (max-width: 520px) {
+  html {
+    scroll-padding-top: 128px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

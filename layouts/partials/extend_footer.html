@@ -9,7 +9,6 @@
   var tichyRezim = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var posledni = window.scrollY;
   var obratNa = window.scrollY;   // odkud měříme souvislý pohyb jedním směrem
-  var ceka = false;
   var smerDolu = true;
 
   function prekresli() {
@@ -36,15 +35,12 @@
     }
 
     posledni = y;
-    ceka = false;
   }
 
-  window.addEventListener('scroll', function () {
-    if (!ceka) {
-      ceka = true;
-      window.requestAnimationFrame(prekresli);
-    }
-  }, { passive: true });
+  // Bez zámku a bez rAF: přepnout dvě třídy je levné, zatímco zámek uvolňovaný
+  // až uvnitř snímku dokáže lištu zaseknout, když se snímek nevykreslí
+  // (skrytá záložka, přepnutý panel).
+  window.addEventListener('scroll', prekresli, { passive: true });
 
   prekresli();
 })();
