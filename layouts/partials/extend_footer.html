@@ -8,7 +8,9 @@
 
   var tichyRezim = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var posledni = window.scrollY;
+  var obratNa = window.scrollY;   // odkud měříme souvislý pohyb jedním směrem
   var ceka = false;
+  var smerDolu = true;
 
   function prekresli() {
     var y = window.scrollY;
@@ -17,8 +19,20 @@
 
     if (!tichyRezim) {
       var dolu = y > posledni;
-      // pod hranicí se hlavička neskrývá, ať neposkakuje hned na začátku stránky
-      header.classList.toggle('header--skryta', dolu && y > 160);
+      if (dolu !== smerDolu) {
+        smerDolu = dolu;
+        obratNa = y;   // změna směru, začínáme měřit znovu
+      }
+      var ujeto = Math.abs(y - obratNa);
+
+      // Práh musí být nízký, jinak na krátkých stránkách (úvod) lišta zůstane
+      // viset přes nadpis. Zpátky se ale vrací až po souvislém pohybu nahoru,
+      // aby nenaskočila přes text, když si čtenář odroluje o větu zpět.
+      if (dolu && y > 40) {
+        header.classList.add('header--skryta');
+      } else if (!dolu && (ujeto > 50 || y < 40)) {
+        header.classList.remove('header--skryta');
+      }
     }
 
     posledni = y;

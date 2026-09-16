@@ -1,5 +1,6 @@
 baseURL = "https://zkousimtedyjsem.cz/"
 languageCode = "cs"
+defaultContentLanguage = "cs"   # bez tohohle se web hlásí jako lang="en"
 title = "Zkouším, tedy jsem"
 theme = "PaperMod"
 timeZone = "Europe/Prague"

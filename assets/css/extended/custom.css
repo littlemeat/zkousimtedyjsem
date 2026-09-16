@@ -291,7 +291,12 @@ html {
   letter-spacing: 0.12em;
   text-transform: uppercase;
   white-space: nowrap;
-  text-decoration: none;   /* podtržení nadpisu při najetí se na štítek nevztahuje */
+  /* Podtržení nadpisu se dědí i do potomků a `text-decoration: none` na dítěti
+     ho nezruší — zrušit ho může jen ten, kdo ho kreslí. Štítek proto zvedáme
+     do vlastní vrstvy, aby jeho pozadí linku překrylo. */
+  position: relative;
+  z-index: 1;
+  text-decoration: none;
 }
 
 /* Účaří dostane štítek k prvnímu řádku, ale ne přesně na jeho střed — zbytek
@@ -745,6 +750,11 @@ pre:hover .copy-code,
   .copy-code {
     opacity: 1;   /* na dotyku hover nikdy nenastane */
   }
+
+  /* Trvale viditelné tlačítko leželo přes první řádek — uvolníme mu pruh. */
+  .post-content pre code {
+    padding-top: 48px;
+  }
 }
 
 /* ---------- výběr textu a fokus ---------- */
@@ -866,6 +876,13 @@ button:focus-visible {
   /* Na 375 px zbývalo ~37 znaků na řádek, čeština se pak seká. */
   .main {
     padding-inline: 18px;
+  }
+
+  /* Na úzkém displeji radši zalomit než schovat: dlouhá adresa mizela za
+     okrajem a nic nenaznačovalo, že se dá blok posunout do strany. */
+  .post-content pre code {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
   }
 
   .post-content {
