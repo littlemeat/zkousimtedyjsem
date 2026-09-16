@@ -16,7 +16,7 @@ body.dark {
   --content: #2a2823;          /* tělo článku */
   --border: #ddd5c4;           /* linky musí být vidět i na jasu */
   --code-bg: #f2ede1;
-  --code-block-bg: #26231f;    /* teplá tmavá, ne studená modročerná */
+  --code-block-bg: #f4efe3;    /* světlý blok kódu, o odstín sytější než inline */
 
   --secondary-strong: #57524a; /* sekundární text určený ke čtení (perex) */
   --accent: #7d4a4a;           /* tlumená vínová — jediná barva na webu, jen odkazy */
@@ -417,16 +417,18 @@ body {
   overflow: auto;
 }
 
-/* Hugo píše barvu pozadí inline přímo na <pre>, proto to přebíjíme.
-   Blok kódu má být tichý: sotva znatelný tón, žádný rámeček ani barvy. */
-.post-content .highlight pre,
-.post-content pre.chroma {
-  background: rgba(31, 29, 26, 0.035) !important;
-  border: 0;
+/* Pozadí drží obal .highlight (odtud --code-block-bg), zatímco chroma píše
+   na vnitřní <pre> inline `background-color:#fff`. Přebít je proto potřeba obojí. */
+.post-content .highlight {
+  background: var(--code-block-bg);
+  border-radius: var(--radius);
+  margin: 1.8em 0;
 }
 
-.post-content .highlight {
-  margin: 1.8em 0;
+.post-content .highlight pre,
+.post-content pre.chroma {
+  background: transparent !important;
+  border: 0;
 }
 
 .post-content pre code {
