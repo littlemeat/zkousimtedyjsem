@@ -5,3 +5,6 @@ resources/
 
 # Podklady k článkům — nikdy necommitovat (repo je veřejné)
 _ARTICLE-INSPO/
+
+# Notion API token — nikdy necommitovat
+.notion-token
