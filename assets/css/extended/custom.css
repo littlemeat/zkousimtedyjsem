@@ -274,10 +274,12 @@ html {
   opacity: 1;
   display: inline-flex;
   align-items: center;
-  align-self: center;   /* nadpis je flex, jinak se štítek roztáhne přes dva řádky */
+  /* Nadpis je flex kontejner. `center` centroval štítek na celý dvouřádkový
+     blok; účaří ho drží u prvního řádku a funguje i na detailu, kde je
+     nadpis výrazně větší. */
+  align-self: baseline;
   flex: 0 0 auto;
   line-height: 1.4;
-  vertical-align: middle;
   margin-inline-start: 12px;
   padding: 3px 10px;
   border-radius: 999px;
@@ -289,6 +291,17 @@ html {
   letter-spacing: 0.12em;
   text-transform: uppercase;
   white-space: nowrap;
+  text-decoration: none;   /* podtržení nadpisu při najetí se na štítek nevztahuje */
+}
+
+/* Účaří dostane štítek k prvnímu řádku, ale ne přesně na jeho střed — zbytek
+   dorovnáváme podle velikosti nadpisu. Míst je jen dvojí: výpis a detail. */
+.post-entry .entry-header h2 .entry-hint {
+  margin-top: 5px;
+}
+
+.post-title .entry-hint {
+  margin-top: 8px;
 }
 
 .entry-hint svg {
