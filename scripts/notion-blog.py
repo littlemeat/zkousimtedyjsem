@@ -408,7 +408,9 @@ def sample_page(db_id):
             {"type": "quote", "quote": {"rich_text": [rt("Citace vypadá na blogu takhle. Hodí se i na zvýraznění jedné myšlenky.")]}},
             {"type": "divider", "divider": {}},
             {"type": "code", "code": {"language": "python",
-                "rich_text": [rt('print("blok kódu i se zvýrazněním syntaxe")')]}},
+                "rich_text": [rt('doplnky = ["hořčík", "vitamín D", "omega-3"]\n'
+                                 'for d in doplnky:\n'
+                                 '    print(f"ráno: {d}")')]}},
             {"type": "heading_1", "heading_1": {"rich_text": [rt("Obrázky")]}},
             {"type": "paragraph", "paragraph": {"rich_text": [
                 rt("Fotku prostě přetáhni do stránky. Při publikaci se automaticky stáhne, "),

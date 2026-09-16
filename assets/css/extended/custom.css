@@ -438,6 +438,7 @@ body {
   background: transparent;
   /* Téma tu má světlý text pro tmavý blok; po ztlumení pozadí byl neviditelný. */
   color: var(--content);
+  line-height: 1.5;
   padding: 16px 18px;
 }
 
@@ -647,14 +648,22 @@ pre:hover .copy-code,
   opacity: 1;
 }
 
+/* Téma tlačítko lepí 4 px od rohu, zatímco kód má odsazení 16 px — vypadalo
+   nakřivo. Výška odpovídá jednomu řádku kódu (0,9rem × 1,5), takže tlačítko
+   přesně překryje první řádek a je na něj vycentrované. */
 .copy-code {
+  top: 16px;
+  right: 16px;
+  height: calc(0.9rem * 1.5);
+  display: inline-flex;
+  align-items: center;
   background: transparent;
   border: 1px solid var(--border);
   border-radius: 999px;
   color: var(--secondary);
   font-family: var(--font-ui);
   font-size: 0.72rem;
-  padding: 3px 10px;
+  padding: 0 10px;
 }
 
 /* Tmavý čip na světlém bloku působil, že se tlačítko při najetí „vypíná“. */
