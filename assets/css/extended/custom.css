@@ -20,6 +20,7 @@ body.dark {
 
   --secondary-strong: #57524a; /* sekundární text určený ke čtení (perex) */
   --accent: #8a5a3c;           /* teplý inkoust — jediná barva na webu, jen odkazy */
+  --accent-dark: #6b4229;      /* odkaz pod kurzorem */
 
   --main-width: 700px;
   --nav-width: 700px;   /* hlavička má mít stejnou levou hranu jako text */
@@ -48,10 +49,6 @@ body {
 
 .header {
   border-bottom: 1px solid var(--border);
-}
-
-.nav {
-  padding-inline: var(--gap);
 }
 
 #menu a,
@@ -141,65 +138,6 @@ body {
   color: var(--secondary-strong);
 }
 
-/* Rubriky: nejnovější článek z každé kategorie. Prázdná rubrika chybí,
-   takže se sloupec objeví sám, až v ní první článek vyjde. */
-.home-streams {
-  max-width: calc(var(--main-width) + var(--gap) * 2);
-  margin-inline: auto;
-  padding: 0 var(--gap);
-  margin-top: 44px;
-  padding-top: 26px;
-  border-top: 1px solid var(--border);
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-  gap: 30px;
-}
-
-.stream-name {
-  display: block;
-  margin-bottom: 8px;
-  font-family: var(--font-ui);
-  font-size: 0.72rem;
-  font-weight: 500;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--secondary);
-}
-
-.stream-name:hover {
-  color: var(--primary);
-}
-
-.stream-post {
-  display: block;
-  font-family: var(--font-ui);
-  font-size: 1rem;
-  font-weight: 500;
-  line-height: 1.35;
-  letter-spacing: -0.015em;
-  color: var(--primary);
-  text-wrap: balance;
-}
-
-.stream-post:hover {
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  text-decoration-thickness: 1px;
-}
-
-.stream-date {
-  display: block;
-  margin-top: 6px;
-  font-family: var(--font-ui);
-  font-size: 0.8rem;
-  color: var(--secondary);
-}
-
-.home-streams + .post-entry,
-.home-streams + article {
-  margin-top: 56px;
-}
-
 @media (max-width: 600px) {
   .home-portrait {
     width: 56px;
@@ -215,15 +153,6 @@ body {
     max-width: none;
   }
 
-  .home-streams {
-    grid-template-columns: 1fr;
-    gap: 18px;
-  }
-
-  /* Na telefonu jde hlavně o rychlou cestu k výpisu — datum je navíc. */
-  .stream-date {
-    display: none;
-  }
 }
 
 .post-entry {
@@ -354,14 +283,19 @@ body {
 .post-content a {
   color: var(--accent);
   text-decoration: underline;
-  text-decoration-color: rgba(138, 90, 60, 0.35);
+  text-decoration-color: rgba(138, 90, 60, 0.4);
   text-underline-offset: 3px;
   text-decoration-thickness: 1px;
   box-shadow: none;
+  transition: color 0.12s ease, text-decoration-color 0.12s ease;
 }
 
+/* Původní hover jen zesytil podtržení, což je skoro neviditelné. Teď se zároveň
+   ztmaví text i podtržení a zesílí se čára — změna je jednoznačně poznat. */
 .post-content a:hover {
-  text-decoration-color: var(--accent);
+  color: var(--accent-dark);
+  text-decoration-color: var(--accent-dark);
+  text-decoration-thickness: 2px;
 }
 
 .post-content ul,
@@ -528,7 +462,7 @@ body {
 
 .paginav a span:not(.title) {
   font-family: var(--font-ui);
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: 500;
   line-height: 1.4;
   letter-spacing: -0.005em;
@@ -536,11 +470,17 @@ body {
   text-wrap: balance;   /* dlouhý titulek rozdělí na dva vyrovnané řádky */
 }
 
-/* PaperMod má vlastní `.paginav span:hover:not(.title)` s podtržením o výchozí
-   tloušťce. Kdyby se uplatnilo, lišil by se vzhled podle toho, jestli je kurzor
-   přímo na textu, nebo jen v odkazu. Obě varianty proto stylujeme stejně. */
+/* Buňka mřížky je vždy blokový prvek, takže linka na ní by se roztáhla přes celou
+   šířku sloupce. Podtrháváme proto řádkový prvek uvnitř. Na buňce rušíme obě
+   linky, které kreslí PaperMod: text-decoration i box-shadow — druhá jmenovaná
+   byla to „dvojité podtržení“, protože box-shadow kopíruje blok, ne text. */
 .paginav a:hover span:not(.title),
-.paginav span:hover:not(.title) {
+.paginav a span:hover:not(.title) {
+  text-decoration: none;
+  box-shadow: none;
+}
+
+.paginav a:hover .nav-title {
   text-decoration: underline;
   text-underline-offset: 3px;
   text-decoration-thickness: 1px;

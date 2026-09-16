@@ -2,9 +2,6 @@
 <footer class="footer">
     {{- /* Místo „Powered by…“ to, co se vracejícímu čtenáři hodí. */}}
     <nav class="footer-links">
-        {{- with site.Home.OutputFormats.Get "rss" }}
-        <a href="{{ .RelPermalink }}" title="Odebírat nové články přes RSS">RSS</a>
-        {{- end }}
         <a href="{{ "o-mne/" | absLangURL }}">Napište mi</a>
         <a href="{{ "affiliate-prohlaseni/" | absLangURL }}">Affiliate prohlášení</a>
     </nav>

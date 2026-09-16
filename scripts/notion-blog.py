@@ -29,6 +29,7 @@ TOKEN_FILE = REPO / ".notion-token"
 API = "https://api.notion.com/v1"
 NOTION_VERSION = "2022-06-28"
 MAX_IMG_PX = 2000
+TITLE_LIMIT = 60   # nad 60 znaků se titulek na webu láme na tři řádky
 NOTE_EMOJI = "🚧"  # callout s touto ikonou = soukromá poznámka, nepublikuje se
 SITE_URL = "https://zkousimtedyjsem.cz"
 
@@ -494,6 +495,9 @@ def cmd_publish(ref, draft=False, mark=False):
             name = conv.download_image(url, "cover")
             cover_lines = ["cover:", f"  image: {yaml_str(name)}", f"  alt: {yaml_str(title)}"]
 
+    if len(title) > TITLE_LIMIT:
+        print(f"  ⚠ titulek má {len(title)} znaků (doporučeno do {TITLE_LIMIT}) — "
+              f"na webu se zalomí na tři řádky")
     print(f"Stahuju bloky článku „{title}“…")
     body = conv.convert(fetch_tree(page["id"]))
 

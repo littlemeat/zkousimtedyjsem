@@ -1,7 +1,5 @@
-{{- /* Hero úvodní stránky.
-       Záměrně bez přítomného času a relativních dat — titulek a absolutní datum
-       platí navždy, takže hero nezestárne, ani když měsíc nevyjde nový článek.
-       Blok rubrik se plní sám z kategorií; prázdná rubrika se prostě nevykreslí. */ -}}
+{{- /* Hero úvodní stránky: zatím jen titulek a dvě věty.
+       Blok s rubrikami jsme zkusili a Marie ho nechtěla — viz historie. */ -}}
 {{- with site.Params.homeInfoParams }}
 <article class="first-entry home-info">
     {{- with .Portrait }}
@@ -15,26 +13,4 @@
         {{ .Content | markdownify }}
     </div>
 </article>
-{{- end }}
-
-{{- with site.GetPage "/categories" }}
-{{- $terms := .Pages }}
-{{- if $terms }}
-<nav class="home-streams" aria-label="Rubriky">
-    {{- range $terms }}
-    {{- $term := . }}
-    {{- $latest := index (.Pages.ByDate.Reverse) 0 }}
-    {{- with $latest }}
-    <div class="stream">
-        {{- /* $ míří na domovskou stránku, rubriku si proto držíme v $term */}}
-        <a class="stream-name" href="{{ $term.RelPermalink }}">{{ $term.LinkTitle }}</a>
-        <a class="stream-post" href="{{ .RelPermalink }}">{{ .Title }}</a>
-        <time class="stream-date" datetime="{{ .Date.Format "2006-01-02" }}">
-            {{ .Date.Format (site.Params.DateFormat | default "2. 1. 2006") }}
-        </time>
-    </div>
-    {{- end }}
-    {{- end }}
-</nav>
-{{- end }}
 {{- end }}
