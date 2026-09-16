@@ -417,11 +417,16 @@ body {
   overflow: auto;
 }
 
-/* Hugo píše barvu pozadí inline přímo na <pre>, proto to přebíjíme. */
+/* Hugo píše barvu pozadí inline přímo na <pre>, proto to přebíjíme.
+   Blok kódu má být tichý: sotva znatelný tón, žádný rámeček ani barvy. */
 .post-content .highlight pre,
 .post-content pre.chroma {
-  background: var(--code-bg) !important;
-  border: 1px solid var(--border);
+  background: rgba(31, 29, 26, 0.035) !important;
+  border: 0;
+}
+
+.post-content .highlight {
+  margin: 1.8em 0;
 }
 
 .post-content pre code {
@@ -429,6 +434,8 @@ body {
   font-family: var(--font-mono);
   font-size: 0.9rem;
   background: transparent;
+  /* Téma tu má světlý text pro tmavý blok; po ztlumení pozadí byl neviditelný. */
+  color: var(--content);
   padding: 16px 18px;
 }
 
@@ -436,28 +443,28 @@ body {
 
 /* Štítky: místo šedých pilulek prosté odkazy s vlasovým podtržením. */
 .post-tags {
-  gap: 18px;
+  gap: 10px;
   margin-top: 36px;
 }
 
 .post-tags a {
-  display: inline;
-  padding: 0;
-  line-height: 1.5;
+  display: inline-block;
+  padding: 5px 14px;
+  line-height: 1.4;
   font-family: var(--font-ui);
   font-size: 0.85rem;
   color: var(--secondary-strong);
   background: transparent;
-  border: 0;
-  border-radius: 0;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  text-decoration: none;
 }
 
 .post-tags a:hover {
-  background: transparent;   /* zbytek po zrušených pilulkách */
+  background: var(--code-bg);
+  border-color: var(--secondary);
   color: var(--primary);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  text-decoration-thickness: 1px;
+  text-decoration: none;
 }
 
 /* Předchozí/další článek. Sloupec se štítkem byl užší, než „NOVĚJŠÍ ČLÁNEK“
@@ -560,8 +567,7 @@ body {
 .footer {
   max-width: calc(var(--main-width) + var(--gap) * 2);
   margin: 48px auto 0;
-  padding: 26px var(--gap) 44px;
-  border-top: 1px solid var(--border);
+  padding: 0 var(--gap) 44px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -569,15 +575,22 @@ body {
   text-align: start;
 }
 
+/* Linka patří na vnitřní prvek, jinak by byla o odsazení širší než text. */
 .footer-links {
+  align-self: stretch;
+  border-top: 1px solid var(--border);
+  padding-top: 26px;
   display: flex;
   flex-wrap: wrap;
   gap: 20px;
 }
 
-/* Téma kreslí u odkazů v patičce border-bottom, my podtržení — byly z toho
-   dvě rovnoběžné čáry, v ©-řádku dokonce i bez najetí. */
-.footer a {
+/* Téma kreslí u odkazů v patičce border-bottom a při najetí ho překresluje —
+   vznikaly dvě rovnoběžné čáry a řádek přitom poskakoval. Musíme vypnout
+   i stav :hover, jinak si ho téma vrátí (má specifičtější selektor). */
+.footer a,
+.footer a:hover,
+.footer a:focus {
   border-bottom: 0;
 }
 
@@ -632,9 +645,21 @@ pre:hover .copy-code,
   opacity: 1;
 }
 
+.copy-code {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--secondary);
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  padding: 3px 10px;
+}
+
+/* Tmavý čip na světlém bloku působil, že se tlačítko při najetí „vypíná“. */
 .copy-code:hover {
-  background: rgba(38, 35, 31, 0.95);
-  color: #fff;
+  background: var(--code-bg);
+  border-color: var(--secondary);
+  color: var(--primary);
 }
 
 @media (hover: none) {
@@ -750,7 +775,6 @@ button:focus-visible {
 
 @media (max-width: 768px) {
   /* 17 px vysoké cíle jsou pod minimem WCAG; odsazení je zvedne nad 24 px. */
-  .post-tags a,
   .footer-links a,
   .footer-meta a,
   .breadcrumbs a {

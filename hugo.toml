@@ -18,6 +18,7 @@ titleCaseStyle = "none"  # nepřepisovat štítky na Velká Písmena
   ShowToc = false
   defaultTheme = "light"
   disableThemeToggle = true
+  disableScrollToTop = true   # šipka nahoru se na stránku nehodila
 
   [params.homeInfoParams]
     # TODO Marie: titulek si přepiš vlastními slovy.
@@ -88,9 +89,9 @@ titleCaseStyle = "none"  # nepřepisovat štítky na Velká Písmena
     [markup.goldmark.renderer]
       unsafe = true
 
-  # Výchozí Monokai je studená zelenočerná a na krémovém webu to byl jediný
-  # cizí barevný systém. Světlé téma ladí se zbytkem, pozadí si přebarvujeme v CSS.
+  # Barevné zvýrazňování syntaxe bylo na krémovém webu nejkřiklavější prvek.
+  # „bw“ je monochromní (rozlišuje jen tučností a kurzívou), pozadí řešíme v CSS.
   [markup.highlight]
-    style = "friendly"
+    style = "bw"
     noClasses = true
     tabWidth = 2

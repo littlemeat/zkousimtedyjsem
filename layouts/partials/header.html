@@ -90,7 +90,13 @@
                 {{- /* Bez atributu title: nativní bublina jen zopakuje text odkazu. */ -}}
                 <a href="{{ .URL | absLangURL }}"
                 {{- cond $is_search (" accesskey=/" | safeHTMLAttr) ("" | safeHTMLAttr ) }}>
-                    <span {{- if eq $menu_item_url $page_url }} class="active" {{- end }}>
+                    {{- /* Aktivní je i nadřazená položka: na detailu článku se má
+                           podtrhnout „Články“. Úvod vynecháme, ten je prefixem všeho. */ -}}
+                    {{- $is_active := eq $menu_item_url $page_url }}
+                    {{- if and (not $is_active) (ne $menu_item_url (absLangURL "/")) }}
+                      {{- $is_active = hasPrefix $page_url $menu_item_url }}
+                    {{- end }}
+                    <span {{- if $is_active }} class="active" {{- end }}>
                         {{- .Pre }}
                         {{- .Name -}}
                         {{ .Post -}}
