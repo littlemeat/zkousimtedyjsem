@@ -1,0 +1,5 @@
+{{- /* Úvodní stránka záměrně nevypisuje články — na ty vede položka Články.
+       Bez tohohle souboru by Hugo použilo obecnou šablonu výpisu z PaperModu. */ -}}
+{{- define "main" }}
+{{- partial "home_info.html" . }}
+{{- end }}
