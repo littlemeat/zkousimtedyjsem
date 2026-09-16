@@ -30,8 +30,20 @@ Marie píše články v Notionu (databáze „Blog — články"), na web se dos
 
 - Stav „K publikaci" v Notionu je signál k **převodu**, ne k pushi na web.
 - Do textů obsahově nezasahovat (viz memory `blog-styl-psani` a `blog-koncept-a-odlozene-veci`).
-- Nepřenáší se: callouty, toggles, sloupce, videa/embedy, rovnice, podtržení, barvy.
+- Nepřenáší se: toggles, sloupce, videa/embedy, rovnice, podtržení, barvy.
   Vzorový článek „vzorovy-clanek" v Notion databázi je živý katalog podporovaného formátování.
+- **Callout s ikonou 🚧 = soukromá poznámka.** Jde na web jako HTML komentář, takže
+  je neviditelný. Callout s jinou ikonou se publikuje jako citace.
+- Obrázky: skript uloží do repa jeden zmenšený JPEG (max 2000 px), WebP a responzivní
+  velikosti generuje Hugo při buildu přes `layouts/_default/_markup/render-image.html`.
+- Články žijí v Notionu, `content/posts/` je jen výstup publikace. Ruční editace
+  markdownu v repu se při dalším publishi přepíše — opravy patří do Notionu.
+
+## Import staršího markdownu do Notionu
+
+`python3 scripts/notion-blog.py import <cesta/index.md> [--kategorie Testuju]`
+Převede front matter na vlastnosti a tělo na bloky. HTML komentáře se stanou
+poznámkami 🚧. Lokální obrázky se nenahrávají — skript na ně upozorní.
 
 ## Setup (jednorázový, dělá Marie)
 
