@@ -19,8 +19,8 @@ body.dark {
   --code-block-bg: #26231f;    /* teplá tmavá, ne studená modročerná */
 
   --secondary-strong: #57524a; /* sekundární text určený ke čtení (perex) */
-  --accent: #8a5a3c;           /* teplý inkoust — jediná barva na webu, jen odkazy */
-  --accent-dark: #6b4229;      /* odkaz pod kurzorem */
+  --accent: #7d4a4a;           /* tlumená vínová — jediná barva na webu, jen odkazy */
+  --accent-dark: #5f3536;      /* odkaz pod kurzorem */
 
   --main-width: 700px;
   --nav-width: 700px;   /* hlavička má mít stejnou levou hranu jako text */
@@ -212,6 +212,18 @@ body {
   margin-bottom: 14px;
 }
 
+.breadcrumbs a {
+  font-size: inherit;
+  color: var(--secondary);
+}
+
+.breadcrumbs a:hover {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+
 /* značka rozepsaného článku — má být poznat, ne křičet */
 .entry-hint {
   color: var(--secondary);
@@ -283,7 +295,7 @@ body {
 .post-content a {
   color: var(--accent);
   text-decoration: underline;
-  text-decoration-color: rgba(138, 90, 60, 0.4);
+  text-decoration-color: rgba(125, 74, 74, 0.4);
   text-underline-offset: 3px;
   text-decoration-thickness: 1px;
   box-shadow: none;
@@ -474,8 +486,8 @@ body {
    šířku sloupce. Podtrháváme proto řádkový prvek uvnitř. Na buňce rušíme obě
    linky, které kreslí PaperMod: text-decoration i box-shadow — druhá jmenovaná
    byla to „dvojité podtržení“, protože box-shadow kopíruje blok, ne text. */
-.paginav a:hover span:not(.title),
-.paginav a span:hover:not(.title) {
+.paginav a:hover span:not(.title):not(.nav-title),
+.paginav a span:hover:not(.title):not(.nav-title) {
   text-decoration: none;
   box-shadow: none;
 }
