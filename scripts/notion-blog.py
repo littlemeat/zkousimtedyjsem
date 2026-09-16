@@ -431,7 +431,7 @@ def db_id():
 
 
 def find_page(ref):
-    if "notion.so" in ref or re.fullmatch(r"[0-9a-f-]{32,36}", ref.replace("-", "")):
+    if "notion." in ref or re.fullmatch(r"[0-9a-f]{32}", ref.replace("-", "")):
         return api("GET", f"/pages/{page_id_from(ref)}")
     res = api("POST", f"/databases/{db_id()}/query", {
         "filter": {"property": "Slug", "rich_text": {"equals": ref}}})
