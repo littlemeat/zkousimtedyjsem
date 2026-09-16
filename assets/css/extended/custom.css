@@ -111,7 +111,7 @@ body {
 
 .first-entry {
   min-height: 0;
-  padding: 32px 0 0;
+  padding: 76px 0 84px;
 }
 
 .home-portrait {
@@ -125,17 +125,25 @@ body {
 }
 
 .home-info .entry-header h1 {
-  font-size: 2.1rem;
-  line-height: 1.15;
-  letter-spacing: -0.03em;
-  margin-bottom: 14px;
+  font-size: clamp(2rem, 4.4vw, 2.9rem);  /* byl nejmenší titulek na webu */
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+  max-width: 620px;
+  text-wrap: balance;                     /* jinak zbylo „dopadlo.“ samo na řádku */
+  margin-bottom: 20px;
 }
 
 .home-info .entry-content {
-  max-width: 560px;
-  font-size: 1.15rem;
-  line-height: 1.55;
+  max-width: 620px;   /* stejná pravá hrana jako titulek */
+  font-size: 1.2rem;
+  line-height: 1.6;
   color: var(--secondary-strong);
+}
+
+/* Bez linky se hero jen vytratilo; takhle je z prázdna pauza před obsahem.
+   Hero je taky <article>, takže :first-of-type by mířilo na něj, ne na článek. */
+.home-info + .post-entry {
+  border-top: 1px solid var(--border);
 }
 
 @media (max-width: 600px) {
@@ -188,7 +196,7 @@ body {
   font-family: var(--font-read);
   font-size: 1.02rem;
   line-height: 1.6;
-  color: var(--secondary);
+  color: var(--secondary-strong);
   margin: 10px 0;
   -webkit-line-clamp: 3;
 }
@@ -228,6 +236,13 @@ body {
 .entry-hint {
   color: var(--secondary);
   opacity: 0.4;
+}
+
+.page-header h1 {
+  font-size: 2.6rem;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1.15;
 }
 
 .post-title {
@@ -295,19 +310,19 @@ body {
 .post-content a {
   color: var(--accent);
   text-decoration: underline;
-  text-decoration-color: rgba(125, 74, 74, 0.4);
-  text-underline-offset: 3px;
-  text-decoration-thickness: 1px;
+  text-decoration-color: rgba(125, 74, 74, 0.55);
+  text-underline-offset: 0.17em;      /* v em, ať drží při jiné velikosti písma */
+  text-decoration-thickness: 1px;     /* nikdy se nemění, aby hover nepřekresloval */
+  text-decoration-skip-ink: none;     /* jinak linku roztrhají dotažnice u j, y, p, g */
   box-shadow: none;
   transition: color 0.12s ease, text-decoration-color 0.12s ease;
 }
 
-/* Původní hover jen zesytil podtržení, což je skoro neviditelné. Teď se zároveň
-   ztmaví text i podtržení a zesílí se čára — změna je jednoznačně poznat. */
+/* Hover mění jen sytost, ne geometrii — zesílení čáry na 2 px znamenalo
+   pětinásobek inkoustu, což na stránce s vlasovými linkami působilo násilně. */
 .post-content a:hover {
   color: var(--accent-dark);
   text-decoration-color: var(--accent-dark);
-  text-decoration-thickness: 2px;
 }
 
 .post-content ul,
@@ -391,6 +406,13 @@ body {
   overflow: auto;
 }
 
+/* Hugo píše barvu pozadí inline přímo na <pre>, proto to přebíjíme. */
+.post-content .highlight pre,
+.post-content pre.chroma {
+  background: var(--code-bg) !important;
+  border: 1px solid var(--border);
+}
+
 .post-content pre code {
   display: block;
   font-family: var(--font-mono);
@@ -426,32 +448,30 @@ body {
   text-decoration-thickness: 1px;
 }
 
-/* Předchozí/další článek. Dva sloupce po 330 px nutily dlouhé české titulky
-   lámat se na dva řádky a pravý sloupec zarovnaný doprava z toho dělal „schod“.
-   Dva řádky přes celou šířku dají titulku 588 px — většina se vejde na řádek —
-   a celý blok je zároveň o polovinu nižší. */
+/* Předchozí/další článek. Sloupec se štítkem byl užší, než „NOVĚJŠÍ ČLÁNEK“
+   potřebuje, takže se štítek lámal a blok vypadal rozbitě; titulek navíc začínal
+   128 px od levé hrany textu. Štítek proto dáváme nad titulek a obojí na stejnou
+   svislici jako článek. Titulek dostal váhu, aby se choval jako cíl kliknutí. */
 .paginav {
   background: transparent;
   border: 0;
   border-top: 1px solid var(--border);
   border-radius: 0;
-  margin-top: 52px;
-  padding-top: 26px;
+  margin-top: 56px;
+  padding-top: 30px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 30px;
 }
 
 .paginav .prev,
 .paginav .next {
+  display: block;
   width: auto;              /* PaperMod drží pevných 50 % */
   margin-inline-start: 0;   /* a pravý sloupec odstrkává doprava */
   text-align: start;
   padding: 0;
-  display: grid;
-  grid-template-columns: 112px 1fr;
-  align-items: baseline;
-  column-gap: 16px;
+  line-height: inherit;
 }
 
 .paginav a:hover {
@@ -463,29 +483,30 @@ body {
 }
 
 .paginav .title {
-  margin-bottom: 0;
+  display: block;
+  margin-bottom: 7px;
   font-family: var(--font-ui);
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   font-weight: 500;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.09em;
+  line-height: 1.2;
   text-transform: uppercase;
   color: var(--secondary);
 }
 
 .paginav a span:not(.title) {
+  display: block;
   font-family: var(--font-ui);
-  font-size: 0.9rem;
-  font-weight: 500;
-  line-height: 1.4;
-  letter-spacing: -0.005em;
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
   color: var(--primary);
-  text-wrap: balance;   /* dlouhý titulek rozdělí na dva vyrovnané řádky */
+  text-wrap: balance;
 }
 
-/* Buňka mřížky je vždy blokový prvek, takže linka na ní by se roztáhla přes celou
-   šířku sloupce. Podtrháváme proto řádkový prvek uvnitř. Na buňce rušíme obě
-   linky, které kreslí PaperMod: text-decoration i box-shadow — druhá jmenovaná
-   byla to „dvojité podtržení“, protože box-shadow kopíruje blok, ne text. */
+/* Linka musí kopírovat text, ne blok. Na buňce rušíme obě linky, které kreslí
+   PaperMod: text-decoration i box-shadow (ta druhá se řídí blokem, ne textem). */
 .paginav a:hover span:not(.title):not(.nav-title),
 .paginav a span:hover:not(.title):not(.nav-title) {
   text-decoration: none;
@@ -494,23 +515,8 @@ body {
 
 .paginav a:hover .nav-title {
   text-decoration: underline;
-  text-underline-offset: 3px;
+  text-underline-offset: 4px;
   text-decoration-thickness: 1px;
-}
-
-@media (max-width: 600px) {
-  .paginav {
-    gap: 22px;
-  }
-
-  .paginav .prev,
-  .paginav .next {
-    grid-template-columns: 1fr;
-  }
-
-  .paginav .title {
-    margin-bottom: 6px;
-  }
 }
 
 /* čísla stránek, navigace mezi články, patička */
@@ -523,9 +529,15 @@ body {
   color: var(--secondary);
 }
 
+/* Jediný vyplněný ovládací prvek na jinak ploché stránce. */
+.top-link {
+  background: transparent;
+  box-shadow: none;
+}
+
 .footer {
   max-width: calc(var(--main-width) + var(--gap) * 2);
-  margin: 72px auto 0;
+  margin: 48px auto 0;
   padding: 26px var(--gap) 44px;
   border-top: 1px solid var(--border);
   display: flex;
@@ -553,8 +565,16 @@ body {
   text-decoration-thickness: 1px;
 }
 
+/* Téma má `.footer span:last-child { white-space: nowrap }`, kvůli čemuž šla
+   stránka na mobilu o 31 px odsunout do strany. Selektor musí být specifičtější. */
+.footer span:last-child.footer-meta,
+.footer .footer-links {
+  white-space: normal;
+}
+
 .footer-meta {
   font-size: 0.8rem;
+  line-height: 1.5;
   color: var(--secondary);
 }
 
@@ -565,13 +585,29 @@ body {
   text-underline-offset: 2px;
 }
 
+/* ---------- výběr textu a fokus ---------- */
+
+/* Systémový výběr je modrošedý, jediná studená plocha na webu. */
+::selection {
+  background: #e9dfc9;
+  color: var(--primary);
+}
+
+/* Kdo web ovládá klávesnicí, musí vidět, kde je. */
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
 /* ---------- tabulky ---------- */
 
 .post-content table {
-  display: block;
+  display: table;             /* blokový box se roztáhl, ale tabulka uvnitř ne */
   width: 100%;
-  min-width: 100%;
-  overflow-x: auto;           /* jen pojistka pro široké tabulky */
+  table-layout: auto;
+  overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   white-space: normal;        /* nowrap smrskával krátkou tabulku do levé půlky */
   font-family: var(--font-ui);
@@ -580,7 +616,7 @@ body {
 }
 
 .post-content th {
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .post-content thead th {
@@ -633,6 +669,11 @@ body {
   /* Tlačítko „nahoru“ leželo přes text a na telefonu ho nikdo nepotřebuje. */
   .top-link {
     display: none;
+  }
+
+  /* Hlavička brala na telefonu 141 px, tedy 17 % displeje. */
+  .nav {
+    line-height: 48px;
   }
 }
 

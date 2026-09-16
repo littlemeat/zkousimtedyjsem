@@ -87,3 +87,10 @@ titleCaseStyle = "none"  # nepřepisovat štítky na Velká Písmena
   [markup.goldmark]
     [markup.goldmark.renderer]
       unsafe = true
+
+  # Výchozí Monokai je studená zelenočerná a na krémovém webu to byl jediný
+  # cizí barevný systém. Světlé téma ladí se zbytkem, pozadí si přebarvujeme v CSS.
+  [markup.highlight]
+    style = "friendly"
+    noClasses = true
+    tabWidth = 2
