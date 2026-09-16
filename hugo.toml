@@ -20,8 +20,12 @@ titleCaseStyle = "none"  # nepřepisovat štítky na Velká Písmena
   disableThemeToggle = true
 
   [params.homeInfoParams]
-    Title = "Zkouším, tedy jsem"
+    # TODO Marie: přepiš si titulek vlastními slovy — má něco tvrdit, ne opakovat
+    # název webu z hlavičky. Max ~12 slov.
+    Title = "Zkouším věci na vlastní kůži a píšu, jak to dopadlo."
     Content = "Ahoj, jsem Marie. Píšu si tady o tom, na čem pracuju, co testuju a kam cestuju — od kódu přes šití a doplňky stravy až po výlety."
+    # Portrét: dej fotku do static/img/ a odkomentuj (kolečko 64 px nad titulkem).
+    # Portrait = "/img/marie.jpg"
 
   [params.fuseOpts]
     isCaseSensitive = false

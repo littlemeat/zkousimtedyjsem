@@ -114,7 +114,116 @@ body {
 
 .first-entry {
   min-height: 0;
-  padding: 32px 0 8px;
+  padding: 32px 0 0;
+}
+
+.home-portrait {
+  display: block;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 20px;
+  box-shadow: 0 0 0 1px rgba(31, 29, 26, 0.07);
+}
+
+.home-info .entry-header h1 {
+  font-size: 2.1rem;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  margin-bottom: 14px;
+}
+
+.home-info .entry-content {
+  max-width: 560px;
+  font-size: 1.15rem;
+  line-height: 1.55;
+  color: var(--secondary-strong);
+}
+
+/* Rubriky: nejnovější článek z každé kategorie. Prázdná rubrika chybí,
+   takže se sloupec objeví sám, až v ní první článek vyjde. */
+.home-streams {
+  max-width: calc(var(--main-width) + var(--gap) * 2);
+  margin-inline: auto;
+  padding: 0 var(--gap);
+  margin-top: 44px;
+  padding-top: 26px;
+  border-top: 1px solid var(--border);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 30px;
+}
+
+.stream-name {
+  display: block;
+  margin-bottom: 8px;
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--secondary);
+}
+
+.stream-name:hover {
+  color: var(--primary);
+}
+
+.stream-post {
+  display: block;
+  font-family: var(--font-ui);
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.35;
+  letter-spacing: -0.015em;
+  color: var(--primary);
+  text-wrap: balance;
+}
+
+.stream-post:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+
+.stream-date {
+  display: block;
+  margin-top: 6px;
+  font-family: var(--font-ui);
+  font-size: 0.8rem;
+  color: var(--secondary);
+}
+
+.home-streams + .post-entry,
+.home-streams + article {
+  margin-top: 56px;
+}
+
+@media (max-width: 600px) {
+  .home-portrait {
+    width: 56px;
+    height: 56px;
+  }
+
+  .home-info .entry-header h1 {
+    font-size: 1.55rem;
+  }
+
+  .home-info .entry-content {
+    font-size: 1.05rem;
+    max-width: none;
+  }
+
+  .home-streams {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  /* Na telefonu jde hlavně o rychlou cestu k výpisu — datum je navíc. */
+  .stream-date {
+    display: none;
+  }
 }
 
 .post-entry {
@@ -371,7 +480,10 @@ body {
   text-decoration-thickness: 1px;
 }
 
-/* Předchozí/další článek: dva sloupce nad vlasovou linkou, žádné šedé boxy. */
+/* Předchozí/další článek. Dva sloupce po 330 px nutily dlouhé české titulky
+   lámat se na dva řádky a pravý sloupec zarovnaný doprava z toho dělal „schod“.
+   Dva řádky přes celou šířku dají titulku 588 px — většina se vejde na řádek —
+   a celý blok je zároveň o polovinu nižší. */
 .paginav {
   background: transparent;
   border: 0;
@@ -380,26 +492,20 @@ body {
   margin-top: 52px;
   padding-top: 26px;
   display: flex;
-  gap: 40px;
+  flex-direction: column;
+  gap: 14px;
 }
 
-/* Blokový prvek by podtrhl celou šířku sloupce včetně prázdna za posledním
-   řádkem. Titulek proto zůstává řádkový a podtržení kopíruje jen text. */
-.paginav a {
-  flex: 1 1 0;
-  padding: 0;
-  display: block;
-}
-
-/* PaperMod dává sloupcům width:50% a pravému margin-inline-start:auto —
-   u nejnovějšího článku (kde je jen „Další“) pak půlka pruhu zeje prázdnotou. */
 .paginav .prev,
 .paginav .next {
-  width: auto;
-}
-
-.paginav .next {
-  margin-inline-start: 0;
+  width: auto;              /* PaperMod drží pevných 50 % */
+  margin-inline-start: 0;   /* a pravý sloupec odstrkává doprava */
+  text-align: start;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 112px 1fr;
+  align-items: baseline;
+  column-gap: 16px;
 }
 
 .paginav a:hover {
@@ -411,8 +517,7 @@ body {
 }
 
 .paginav .title {
-  display: block;
-  margin-bottom: 7px;
+  margin-bottom: 0;
   font-family: var(--font-ui);
   font-size: 0.7rem;
   font-weight: 500;
@@ -423,11 +528,12 @@ body {
 
 .paginav a span:not(.title) {
   font-family: var(--font-ui);
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 500;
-  line-height: 1.35;
-  letter-spacing: -0.015em;
+  line-height: 1.4;
+  letter-spacing: -0.005em;
   color: var(--primary);
+  text-wrap: balance;   /* dlouhý titulek rozdělí na dva vyrovnané řádky */
 }
 
 /* PaperMod má vlastní `.paginav span:hover:not(.title)` s podtržením o výchozí
@@ -440,18 +546,18 @@ body {
   text-decoration-thickness: 1px;
 }
 
-.paginav .next {
-  text-align: right;
-}
-
 @media (max-width: 600px) {
   .paginav {
-    flex-direction: column;
-    gap: 26px;
+    gap: 22px;
   }
 
+  .paginav .prev,
   .paginav .next {
-    text-align: left;
+    grid-template-columns: 1fr;
+  }
+
+  .paginav .title {
+    margin-bottom: 6px;
   }
 }
 

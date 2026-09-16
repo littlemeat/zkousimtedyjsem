@@ -1,0 +1,7 @@
+# Přepis štítků z PaperModu. V šabloně je „prev" novější a „next" starší článek,
+# což čtenář z „PŘEDCHOZÍ / DALŠÍ" nepozná.
+- id: prev_page
+  translation: "Novější článek"
+
+- id: next_page
+  translation: "Starší článek"
