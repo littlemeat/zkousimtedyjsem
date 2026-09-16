@@ -281,11 +281,12 @@ html {
   opacity: 1;
   display: inline-flex;
   align-items: center;
-  /* Nadpis je flex kontejner. `center` centroval štítek na celý dvouřádkový
-     blok; účaří ho drží u prvního řádku a funguje i na detailu, kde je
-     nadpis výrazně větší. */
-  align-self: baseline;
-  flex: 0 0 auto;
+  /* Podtržení nadpisu se dědí do potomků a kreslí si ho sám potomek — dítě
+     ho zrušit nedokáže, ani vlastní vrstvou. Do prvků mimo tok se ale nedědí,
+     proto je štítek odpozicovaný. Místo mu v nadpisu drží odsazení vpravo,
+     takže text nikdy nedoteče pod něj. */
+  position: absolute;
+  inset-inline-end: 0;
   line-height: 1.4;
   margin-inline-start: 12px;
   padding: 3px 10px;
@@ -298,22 +299,22 @@ html {
   letter-spacing: 0.12em;
   text-transform: uppercase;
   white-space: nowrap;
-  /* Podtržení nadpisu se dědí i do potomků a `text-decoration: none` na dítěti
-     ho nezruší — zrušit ho může jen ten, kdo ho kreslí. Štítek proto zvedáme
-     do vlastní vrstvy, aby jeho pozadí linku překrylo. */
-  position: relative;
-  z-index: 1;
   text-decoration: none;
 }
 
-/* Účaří dostane štítek k prvnímu řádku, ale ne přesně na jeho střed — zbytek
-   dorovnáváme podle velikosti nadpisu. Míst je jen dvojí: výpis a detail. */
+.entry-hint-parent {
+  display: block;   /* flex tu už není potřeba, štítek drží odpozicování */
+  position: relative;
+  padding-inline-end: 103px;
+}
+
+/* Svislá poloha se odvíjí od výšky řádku nadpisu — místa jsou jen dvě. */
 .post-entry .entry-header h2 .entry-hint {
-  margin-top: 5px;
+  top: 6px;
 }
 
 .post-title .entry-hint {
-  margin-top: 8px;
+  top: 14px;
 }
 
 .entry-hint svg {
