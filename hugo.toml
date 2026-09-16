@@ -3,6 +3,7 @@ languageCode = "cs"
 title = "Zkouším, tedy jsem"
 theme = "PaperMod"
 timeZone = "Europe/Prague"
+titleCaseStyle = "none"  # nepřepisovat štítky na Velká Písmena
 
 [params]
   env = "production"
