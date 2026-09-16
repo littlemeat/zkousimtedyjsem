@@ -3,6 +3,7 @@
 
 Příkazy:
   init --parent <notion_page_url>   Založí databázi „Blog — články" + vzorový článek
+  sample                            Vytvoří vzorový článek v existující databázi
   list                              Vypíše články a jejich stav
   publish <slug|page_url> [--draft] [--mark-published]
                                     Převede článek z Notionu na Hugo bundle
@@ -344,7 +345,12 @@ def cmd_init(parent_ref):
     })
     CONFIG_FILE.write_text(json.dumps({"database_id": db["id"]}, indent=2))
     print(f"Databáze založena: {db.get('url')}")
-    sample = api("POST", "/pages", sample_page(db["id"]))
+    cmd_sample()
+
+
+def cmd_sample():
+    """Vytvoří vzorový článek v existující databázi."""
+    sample = api("POST", "/pages", sample_page(db_id()))
     print(f"Vzorový článek: {sample.get('url')}")
 
 
@@ -383,8 +389,10 @@ def sample_page(db_id):
                 rt(" se NEpřenese (markdown ho nemá) — nepoužívej ho. Barvy textu se nepřenáší taky.")]}},
             {"type": "heading_1", "heading_1": {"rich_text": [rt("Seznamy")]}},
             {"type": "bulleted_list_item", "bulleted_list_item": {"rich_text": [rt("odrážka")]}},
-            {"type": "bulleted_list_item", "bulleted_list_item": {"rich_text": [rt("odrážka s vnořením")]},
-             "children": [{"type": "bulleted_list_item", "bulleted_list_item": {"rich_text": [rt("vnořená odrážka")]}}]},
+            {"type": "bulleted_list_item", "bulleted_list_item": {
+                "rich_text": [rt("odrážka s vnořením")],
+                "children": [{"type": "bulleted_list_item", "bulleted_list_item": {
+                    "rich_text": [rt("vnořená odrážka")]}}]}},
             {"type": "numbered_list_item", "numbered_list_item": {"rich_text": [rt("číslovaný seznam")]}},
             {"type": "numbered_list_item", "numbered_list_item": {"rich_text": [rt("druhá položka")]}},
             {"type": "to_do", "to_do": {"rich_text": [rt("checkbox (hodí se na packing listy)")], "checked": False}},
@@ -404,13 +412,13 @@ def sample_page(db_id):
             {"type": "heading_1", "heading_1": {"rich_text": [rt("Tabulka")]}},
             {"type": "paragraph", "paragraph": {"rich_text": [
                 rt("Jednoduchá tabulka projde (první řádek se bere jako hlavička):")]}},
-            {"type": "table", "table": {"table_width": 3, "has_column_header": True,
-                "has_row_header": False},
-             "children": [
-                {"type": "table_row", "table_row": {"cells": [[rt("Co")], [rt("Funguje?")], [rt("Poznámka")]]}},
-                {"type": "table_row", "table_row": {"cells": [[rt("Tabulky")], [rt("ano")], [rt("jen jednoduché")]]}},
-                {"type": "table_row", "table_row": {"cells": [[rt("Emoji 🎉")], [rt("ano")], [rt("v pohodě")]]}},
-             ]},
+            {"type": "table", "table": {
+                "table_width": 3, "has_column_header": True, "has_row_header": False,
+                "children": [
+                    {"type": "table_row", "table_row": {"cells": [[rt("Co")], [rt("Funguje?")], [rt("Poznámka")]]}},
+                    {"type": "table_row", "table_row": {"cells": [[rt("Tabulky")], [rt("ano")], [rt("jen jednoduché")]]}},
+                    {"type": "table_row", "table_row": {"cells": [[rt("Emoji 🎉")], [rt("ano")], [rt("v pohodě")]]}},
+                ]}},
             {"type": "heading_1", "heading_1": {"rich_text": [rt("Čemu se vyhnout")]}},
             {"type": "paragraph", "paragraph": {"rich_text": [
                 rt("Tyhle bloky se na blog nepřevedou (pipeline tě na ně při publikaci upozorní): "),
@@ -533,6 +541,8 @@ def main():
         cmd_selftest()
     elif cmd == "init":
         cmd_init(args[args.index("--parent") + 1])
+    elif cmd == "sample":
+        cmd_sample()
     elif cmd == "list":
         cmd_list()
     elif cmd == "publish":

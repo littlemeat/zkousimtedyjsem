@@ -42,3 +42,6 @@ Marie píše články v Notionu (databáze „Blog — články"), na web se dos
 3. `python3 scripts/notion-blog.py init --parent <URL stránky Blog>` — založí databázi
    s vlastnostmi (Název, Slug, Kategorie, Tagy, Stav, Datum, Popis, Summary, URL),
    vytvoří vzorový článek s katalogem formátování a zapíše `.notion-blog.json`.
+   Příkaz `sample` vytvoří vzorový článek znovu, bez zakládání databáze.
+
+Hotovo 16. 9. 2026: databáze i vzorový článek („vzorovy-clanek") v Notionu existují.
