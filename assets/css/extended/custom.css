@@ -60,6 +60,11 @@ body {
   font-size: 1.3rem;
   font-weight: 600;
   letter-spacing: -0.02em;
+  transition: color 0.12s ease;
+}
+
+.logo a:hover {
+  color: var(--accent);
 }
 
 #menu li a {
@@ -169,9 +174,10 @@ body {
 }
 
 /* Karty jsme zrušili, ale řádek je celý klikací — musí to být poznat. */
-.post-entry:hover {
+.post-entry:hover,
+.post-entry:active {
   background: transparent;
-  transform: none;
+  transform: none;   /* téma řádek při stisku zmenšuje na 96 % */
 }
 
 .post-entry:hover .entry-header h2 {
@@ -325,6 +331,11 @@ body {
   text-decoration-color: var(--accent-dark);
 }
 
+/* Kotva „#“ u nadpisu je taky odkaz — brala si vínové podtržení. */
+.post-content .anchor {
+  text-decoration: none;
+}
+
 .post-content ul,
 .post-content ol {
   margin: 1.2em 0;
@@ -442,6 +453,7 @@ body {
 }
 
 .post-tags a:hover {
+  background: transparent;   /* zbytek po zrušených pilulkách */
   color: var(--primary);
   text-decoration: underline;
   text-underline-offset: 3px;
@@ -494,7 +506,7 @@ body {
   color: var(--secondary);
 }
 
-.paginav a span:not(.title) {
+.paginav a > span:not(.title) {
   display: block;
   font-family: var(--font-ui);
   font-size: 1.15rem;
@@ -505,12 +517,22 @@ body {
   text-wrap: balance;
 }
 
-/* Linka musí kopírovat text, ne blok. Na buňce rušíme obě linky, které kreslí
-   PaperMod: text-decoration i box-shadow (ta druhá se řídí blokem, ne textem). */
-.paginav a:hover span:not(.title):not(.nav-title),
-.paginav a span:hover:not(.title):not(.nav-title) {
-  text-decoration: none;
+/* Titulek musí zůstat řádkový, aby ho linka kopírovala podle textu. */
+.paginav .nav-title {
+  display: inline;
+}
+
+/* PaperMod kreslí druhou linku přes box-shadow — tu rušíme na všech spanech
+   uvnitř odkazu. Text-decoration naopak rušíme jen na buňce (přímý potomek),
+   jinak by přebila podtržení vnitřního titulku a hover by zmizel úplně. */
+.paginav a:hover span:not(.title),
+.paginav a span:hover:not(.title) {
   box-shadow: none;
+}
+
+.paginav a:hover > span:not(.title),
+.paginav a > span:hover:not(.title) {
+  text-decoration: none;
 }
 
 .paginav a:hover .nav-title {
@@ -553,6 +575,12 @@ body {
   gap: 20px;
 }
 
+/* Téma kreslí u odkazů v patičce border-bottom, my podtržení — byly z toho
+   dvě rovnoběžné čáry, v ©-řádku dokonce i bez najetí. */
+.footer a {
+  border-bottom: 0;
+}
+
 .footer-links a {
   color: var(--secondary-strong);
   font-size: 0.9rem;
@@ -585,6 +613,36 @@ body {
   text-underline-offset: 2px;
 }
 
+.footer-meta a:hover {
+  color: var(--primary);
+  text-decoration-color: currentColor;
+}
+
+/* Tlačítko „kopírovat“ mělo display: none, takže vypadlo z pořadí Tabu
+   a na dotyku bylo nedostupné. Průhlednost obojí řeší. */
+.copy-code {
+  display: block;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+div.highlight:hover .copy-code,
+pre:hover .copy-code,
+.copy-code:focus-visible {
+  opacity: 1;
+}
+
+.copy-code:hover {
+  background: rgba(38, 35, 31, 0.95);
+  color: #fff;
+}
+
+@media (hover: none) {
+  .copy-code {
+    opacity: 1;   /* na dotyku hover nikdy nenastane */
+  }
+}
+
 /* ---------- výběr textu a fokus ---------- */
 
 /* Systémový výběr je modrošedý, jediná studená plocha na webu. */
@@ -599,6 +657,19 @@ button:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 3px;
   border-radius: 2px;
+}
+
+/* Téma má u tlačítka nahoru `outline: 0`, takže z klávesnice bylo neviditelné. */
+.top-link:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* <pre> je rolovatelná oblast, prohlížeč ho dává do pořadí Tabu — ať má
+   stejný prstenec jako zbytek webu, ne výchozí oranžový. */
+.post-content pre:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
 }
 
 /* ---------- tabulky ---------- */
@@ -674,6 +745,17 @@ button:focus-visible {
   /* Hlavička brala na telefonu 141 px, tedy 17 % displeje. */
   .nav {
     line-height: 48px;
+  }
+}
+
+@media (max-width: 768px) {
+  /* 17 px vysoké cíle jsou pod minimem WCAG; odsazení je zvedne nad 24 px. */
+  .post-tags a,
+  .footer-links a,
+  .footer-meta a,
+  .breadcrumbs a {
+    display: inline-block;
+    padding-block: 6px;
   }
 }
 
