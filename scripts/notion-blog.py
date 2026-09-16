@@ -29,6 +29,7 @@ TOKEN_FILE = REPO / ".notion-token"
 API = "https://api.notion.com/v1"
 NOTION_VERSION = "2022-06-28"
 MAX_IMG_PX = 2000
+NOTE_EMOJI = "🚧"  # callout s touto ikonou = soukromá poznámka, nepublikuje se
 SITE_URL = "https://zkousimtedyjsem.cz"
 
 CATEGORIES = ["Pracuju", "Testuju", "Cestuju"]
@@ -165,7 +166,8 @@ class Converter:
                     lines.append("")
             lines += self.block(b, indent, n)
             prev = t
-        if prev in self.LIST_TYPES and lines and lines[-1] != "":
+        # prázdný řádek za seznamem jen na nejvyšší úrovni — uvnitř by seznam rozpůlil
+        if indent == 0 and prev in self.LIST_TYPES and lines and lines[-1] != "":
             lines.append("")
         return lines
 
@@ -205,8 +207,12 @@ class Converter:
         elif t == "table":
             out = self.table(kids)
         elif t == "callout":
-            self.warnings.append("callout → převedeno na obyčejnou citaci")
-            out = [f"> {md()}", ""]
+            if (d.get("icon") or {}).get("emoji") == NOTE_EMOJI:
+                # soukromá poznámka — na web jde jako HTML komentář, tedy neviditelně
+                out = [f"<!-- {md()} -->", ""]
+            else:
+                self.warnings.append("callout → převedeno na obyčejnou citaci")
+                out = [f"> {md()}", ""]
         elif t == "toggle":
             self.warnings.append("toggle → rozbaleno do textu")
             out = [f"**{md()}**", ""] + self.convert(kids)
@@ -419,6 +425,14 @@ def sample_page(db_id):
                     {"type": "table_row", "table_row": {"cells": [[rt("Tabulky")], [rt("ano")], [rt("jen jednoduché")]]}},
                     {"type": "table_row", "table_row": {"cells": [[rt("Emoji 🎉")], [rt("ano")], [rt("v pohodě")]]}},
                 ]}},
+            {"type": "heading_1", "heading_1": {"rich_text": [rt("Soukromé poznámky")]}},
+            {"type": "paragraph", "paragraph": {"rich_text": [
+                rt("Potřebuješ si v článku nechat vzkaz pro sebe („sem doplnit číslo“)? Udělej "),
+                rt("callout s ikonou 🚧", bold=True),
+                rt(" (napiš /callout a klikni na ikonu). Takový blok se na web nepřenese — zůstane jen ve zdrojovém kódu stránky jako neviditelný komentář. Callout s jakoukoli jinou ikonou se publikuje jako citace.")]}},
+            {"type": "callout", "callout": {
+                "icon": {"type": "emoji", "emoji": NOTE_EMOJI},
+                "rich_text": [rt("Takhle vypadá poznámka, kterou čtenář nikdy neuvidí.")]}},
             {"type": "heading_1", "heading_1": {"rich_text": [rt("Čemu se vyhnout")]}},
             {"type": "paragraph", "paragraph": {"rich_text": [
                 rt("Tyhle bloky se na blog nepřevedou (pipeline tě na ně při publikaci upozorní): "),
@@ -465,6 +479,9 @@ def cmd_publish(ref, draft=False, mark=False):
         rich_to_md(next(v["title"] for v in props.values() if v["type"] == "title")))
     out_dir = REPO / "content" / "posts" / slug
     out_dir.mkdir(parents=True, exist_ok=True)
+    # smazat fotky z minulé publikace, ať v článku nezůstanou ty, které už v Notionu nejsou
+    for old in list(out_dir.glob("foto-*.*")) + list(out_dir.glob("cover.*")):
+        old.unlink()
 
     conv = Converter(out_dir=out_dir)
     fm, title = front_matter(page, slug, draft)
@@ -494,6 +511,244 @@ def cmd_publish(ref, draft=False, mark=False):
         print("Stav v Notionu → Publikováno")
 
 
+# ---------- import: markdown → Notion ----------
+
+INLINE_RE = re.compile(
+    r"(?P<code>`[^`]+`)"
+    r"|(?P<link>\[[^\]]+\]\([^)]+\))"
+    r"|(?P<bold>\*\*[^*]+\*\*)"
+    r"|(?P<strike>~~[^~]+~~)"
+    r"|(?P<italic>\*[^*\n]+\*)"
+)
+
+
+def md_inline(text):
+    """Markdown řádek → Notion rich_text."""
+    out, pos = [], 0
+    for m in INLINE_RE.finditer(text):
+        if m.start() > pos:
+            out += chunked(text[pos:m.start()])
+        kind = m.lastgroup
+        raw = m.group()
+        if kind == "code":
+            out.append(rt(raw[1:-1], code=True))
+        elif kind == "bold":
+            out.append(rt(raw[2:-2], bold=True))
+        elif kind == "strike":
+            out.append(rt(raw[2:-2], strikethrough=True))
+        elif kind == "italic":
+            out.append(rt(raw[1:-1], italic=True))
+        elif kind == "link":
+            label, url = re.match(r"\[([^\]]+)\]\(([^)]+)\)", raw).groups()
+            out.append(rt(label, link=url))
+        pos = m.end()
+    if pos < len(text):
+        out += chunked(text[pos:])
+    return out
+
+
+def chunked(text, limit=2000):
+    """Notion má limit 2000 znaků na jeden rich_text prvek."""
+    return [rt(text[i:i + limit]) for i in range(0, len(text), limit)] or []
+
+
+def blk(kind, rich, **extra):
+    return {"type": kind, kind: {"rich_text": rich, **extra}}
+
+
+def md_to_blocks(md, warnings):
+    """Tělo markdownu → seznam Notion bloků (vnořené uvnitř payloadu)."""
+    lines = md.split("\n")
+    blocks, i = [], 0
+    while i < len(lines):
+        raw = lines[i]
+        line = raw.strip()
+
+        if not line:
+            i += 1
+            continue
+
+        # HTML komentář (poznámky a TODO) — zachovat jako odstavec, ať se nic neztratí
+        if line.startswith("<!--"):
+            buf = []
+            while i < len(lines):
+                buf.append(lines[i])
+                if "-->" in lines[i]:
+                    break
+                i += 1
+            i += 1
+            txt = re.sub(r"^<!--|-->$", "", "\n".join(buf).strip()).strip()
+            if txt:
+                blocks.append(blk("callout", chunked(txt),
+                                  icon={"type": "emoji", "emoji": NOTE_EMOJI}))
+            continue
+
+        # blok kódu
+        if line.startswith("```"):
+            lang = line[3:].strip() or "plain text"
+            i += 1
+            buf = []
+            while i < len(lines) and not lines[i].strip().startswith("```"):
+                buf.append(lines[i])
+                i += 1
+            i += 1
+            blocks.append(blk("code", chunked("\n".join(buf)), language=lang))
+            continue
+
+        # tabulka
+        if line.startswith("|") and i + 1 < len(lines) and re.match(r"^\s*\|[\s:|-]+\|\s*$", lines[i + 1]):
+            rows = []
+            while i < len(lines) and lines[i].strip().startswith("|"):
+                if not re.match(r"^\s*\|[\s:|-]+\|\s*$", lines[i]):
+                    cells = [c.strip() for c in lines[i].strip().strip("|").split("|")]
+                    rows.append([md_inline(c) for c in cells])
+                i += 1
+            width = max(len(r) for r in rows)
+            rows = [r + [[]] * (width - len(r)) for r in rows]
+            blocks.append({"type": "table", "table": {
+                "table_width": width, "has_column_header": True, "has_row_header": False,
+                "children": [{"type": "table_row", "table_row": {"cells": r}} for r in rows]}})
+            continue
+
+        if re.fullmatch(r"-{3,}", line):
+            blocks.append({"type": "divider", "divider": {}})
+            i += 1
+            continue
+
+        m = re.match(r"^(#{2,4})\s+(.*)", line)
+        if m:
+            level = {2: "heading_1", 3: "heading_2", 4: "heading_3"}[len(m.group(1))]
+            blocks.append(blk(level, md_inline(m.group(2))))
+            i += 1
+            continue
+
+        if line.startswith("> "):
+            buf = []
+            while i < len(lines) and lines[i].strip().startswith(">"):
+                buf.append(lines[i].strip().lstrip(">").strip())
+                i += 1
+            blocks.append(blk("quote", md_inline(" ".join(b for b in buf if b))))
+            continue
+
+        m = re.match(r"^!\[([^\]]*)\]\(([^)]+)\)", line)
+        if m:
+            alt, src = m.groups()
+            if src.startswith("http"):
+                blocks.append({"type": "image", "image": {
+                    "type": "external", "external": {"url": src},
+                    "caption": md_inline(alt) if alt else []}})
+            else:
+                warnings.append(f"lokální obrázek {src} — nahraj ho do Notionu ručně")
+                blocks.append(blk("paragraph", chunked(f"[obrázek k doplnění: {src} — {alt}]")))
+            i += 1
+            # popisek pod fotkou už je v caption — nedělat z něj ještě odstavec
+            j = i
+            while j < len(lines) and not lines[j].strip():
+                j += 1
+            if alt and j < len(lines) and lines[j].strip() == f"*{alt}*":
+                i = j + 1
+            continue
+
+        indent = (len(raw) - len(raw.lstrip(" "))) // 4
+        m = re.match(r"^- \[([ xX])\]\s+(.*)", line)
+        if m:
+            blocks.append(blk("to_do", md_inline(m.group(2)),
+                              checked=m.group(1).lower() == "x"))
+            i += 1
+            continue
+        m = re.match(r"^[-*]\s+(.*)", line)
+        if m:
+            add_list_item(blocks, indent, blk("bulleted_list_item", md_inline(m.group(1))))
+            i += 1
+            continue
+        m = re.match(r"^\d+\.\s+(.*)", line)
+        if m:
+            add_list_item(blocks, indent, blk("numbered_list_item", md_inline(m.group(1))))
+            i += 1
+            continue
+
+        # odstavec: spojit navazující řádky
+        buf = [line]
+        i += 1
+        while i < len(lines) and lines[i].strip() and not re.match(
+                r"^\s*(#{2,4}\s|[-*]\s|\d+\.\s|>|```|\||!\[|<!--|-{3,}$)", lines[i]):
+            buf.append(lines[i].strip())
+            i += 1
+        blocks.append(blk("paragraph", md_inline(" ".join(buf))))
+    return blocks
+
+
+def add_list_item(blocks, indent, item):
+    """Odsazenou položku pověsí pod poslední položku o úroveň výš."""
+    if indent and blocks:
+        parent = blocks[-1]
+        for _ in range(indent - 1):
+            kids = parent[parent["type"]].get("children")
+            if not kids:
+                break
+            parent = kids[-1]
+        payload = parent[parent["type"]]
+        payload.setdefault("children", []).append(item)
+    else:
+        blocks.append(item)
+
+
+def parse_front_matter(text):
+    m = re.match(r"^---\n(.*?)\n---\n?(.*)$", text, re.S)
+    if not m:
+        return {}, text
+    fm, body = {}, m.group(2)
+    for line in m.group(1).split("\n"):
+        km = re.match(r"^(\w+):\s*(.*)$", line)
+        if not km:
+            continue
+        key, val = km.group(1), km.group(2).strip()
+        if val.startswith("[") and val.endswith("]"):
+            fm[key] = [v.strip().strip('"\'') for v in val[1:-1].split(",") if v.strip()]
+        else:
+            fm[key] = val.strip('"\'')
+    return fm, body
+
+
+def cmd_import(path_str, category=None):
+    path = Path(path_str)
+    if not path.is_absolute():
+        path = REPO / path
+    fm, body = parse_front_matter(path.read_text())
+    slug = path.parent.name if path.name == "index.md" else path.stem
+    cat = category or (fm.get("categories") or [None])[0]
+    if cat not in CATEGORIES:
+        if cat:
+            print(f"  ⚠ kategorie „{cat}“ není Pracuju/Testuju/Cestuju — nechávám prázdnou")
+        cat = None
+
+    warnings = []
+    blocks = md_to_blocks(body, warnings)
+
+    props = {
+        "Název": {"title": [rt(fm.get("title", slug))]},
+        "Slug": {"rich_text": [rt(slug)]},
+        "Tagy": {"multi_select": [{"name": t} for t in fm.get("tags", [])]},
+        "Stav": {"select": {"name": "Píšu"}},
+        "Popis": {"rich_text": chunked(fm.get("description", ""))},
+        "Summary": {"rich_text": chunked(fm.get("summary", ""))},
+    }
+    if cat:
+        props["Kategorie"] = {"select": {"name": cat}}
+    if fm.get("date"):
+        props["Datum"] = {"date": {"start": fm["date"][:10]}}
+
+    page = api("POST", "/pages", {"parent": {"database_id": db_id()},
+                                  "properties": props, "children": blocks[:100]})
+    for start in range(100, len(blocks), 100):
+        api("PATCH", f"/blocks/{page['id']}/children",
+            {"children": blocks[start:start + 100]})
+    print(f"Importováno „{fm.get('title', slug)}“ ({len(blocks)} bloků): {page.get('url')}")
+    for w in sorted(set(warnings)):
+        print(f"  ⚠ {w}")
+    return page
+
+
 # ---------- selftest ----------
 
 FIXTURE = [
@@ -517,6 +772,63 @@ FIXTURE = [
 ]
 
 
+ROUNDTRIP_MD = """## Nadpis
+
+Odstavec s **tučným**, *kurzívou*, ~~přeškrtnutým~~, `kódem` a [odkazem](https://example.com).
+
+### Podnadpis
+
+- odrážka
+    - vnořená odrážka
+- druhá odrážka
+
+1. jedna
+2. dva
+
+- [ ] nehotovo
+- [x] hotovo
+
+> citace
+
+---
+
+```python
+x = 1
+```
+
+| A | B |
+|---|---|
+| 1 | 2 |
+
+![popisek](https://example.com/f.jpg)
+*popisek*
+
+<!-- soukromá poznámka, na web se nedostane -->
+"""
+
+
+def write_to_read(block):
+    """Zápisový tvar bloku → čtecí tvar (vnořené bloky vedle payloadu)."""
+    t = block["type"]
+    payload = dict(block.get(t, {}))
+    for key in ("rich_text", "caption"):
+        if key in payload:
+            payload[key] = [{"plain_text": r["text"]["content"],
+                             "annotations": r.get("annotations", {}),
+                             **({"href": r["text"]["link"]["url"]}
+                                if r["text"].get("link") else {})}
+                            for r in payload[key]]
+    if t == "table_row":
+        payload["cells"] = [[{"plain_text": c["text"]["content"],
+                              "annotations": c.get("annotations", {})} for c in cell]
+                            for cell in payload["cells"]]
+    kids = payload.pop("children", None)
+    out = {"type": t, t: payload}
+    if kids:
+        out["_children"] = [write_to_read(k) for k in kids]
+    return out
+
+
 def cmd_selftest():
     conv = Converter(download=False)
     md = "\n".join(conv.convert(FIXTURE))
@@ -525,11 +837,21 @@ def cmd_selftest():
               "```python", "| A | B |", "![popisek](https://example.com/f.jpg)",
               "> pozor"]
     missing = [c for c in checks if c not in md]
-    print(md)
-    print("-" * 40)
     if missing:
-        sys.exit(f"SELFTEST FAILED, chybí: {missing}")
-    print(f"SELFTEST OK ({len(checks)} kontrol, varování: {sorted(set(conv.warnings))})")
+        sys.exit(f"SELFTEST FAILED (Notion→md), chybí: {missing}")
+    print(f"Notion→markdown OK ({len(checks)} kontrol)")
+
+    # round trip: markdown → Notion bloky → markdown
+    warnings = []
+    blocks = [write_to_read(b) for b in md_to_blocks(ROUNDTRIP_MD, warnings)]
+    back = re.sub(r"\n{3,}", "\n\n", "\n".join(Converter(download=False).convert(blocks))).strip()
+    want = ROUNDTRIP_MD.strip()
+    if back != want:
+        import difflib
+        print("\n".join(difflib.unified_diff(want.split("\n"), back.split("\n"),
+                                             "originál", "po round tripu", lineterm="")))
+        sys.exit("SELFTEST FAILED (round trip)")
+    print(f"markdown→Notion→markdown OK ({len(blocks)} bloků, beze změny)")
 
 
 def main():
@@ -547,6 +869,9 @@ def main():
         cmd_list()
     elif cmd == "publish":
         cmd_publish(args[1], draft="--draft" in args, mark="--mark-published" in args)
+    elif cmd == "import":
+        cat = args[args.index("--kategorie") + 1] if "--kategorie" in args else None
+        cmd_import(args[1], category=cat)
     else:
         sys.exit(__doc__)
 

@@ -1,0 +1,45 @@
+{{- /* Obrázky v článcích: WebP + responzivní velikosti.
+       Fotka v repu zůstává jedna (JPEG z Notionu), varianty generuje Hugo při buildu.
+       Pro externí URL a formáty, které Hugo nezpracuje (GIF, SVG), platí prostý <img>. */ -}}
+{{- $u := urls.Parse .Destination -}}
+{{- $src := $u.String -}}
+{{- $res := false -}}
+{{- if not $u.IsAbs -}}
+  {{- $path := strings.TrimPrefix "./" $u.Path -}}
+  {{- with or (.PageInner.Resources.Get $path) (resources.Get $path) -}}
+    {{- $src = .RelPermalink -}}
+    {{- if in (slice "image/jpeg" "image/png" "image/webp") .MediaType.Type -}}
+      {{- $res = . -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+
+{{- if $res -}}
+  {{- $maxW := cond (lt $res.Width 1440) $res.Width 1440 -}}
+  {{- $base := $res.Resize (printf "%dx webp q80" $maxW) -}}
+  {{- $srcset := slice -}}
+  {{- range $w := slice 480 720 1080 1440 -}}
+    {{- if le $w $res.Width -}}
+      {{- $v := $res.Resize (printf "%dx webp q80" $w) -}}
+      {{- $srcset = $srcset | append (printf "%s %dw" $v.RelPermalink $w) -}}
+    {{- end -}}
+  {{- end -}}
+  {{- if not $srcset -}}
+    {{- $srcset = slice (printf "%s %dw" $base.RelPermalink $base.Width) -}}
+  {{- end -}}
+  <img src="{{ $base.RelPermalink }}"
+    srcset="{{ delimit $srcset ", " }}"
+    sizes="(max-width: 768px) 100vw, 720px"
+    width="{{ $base.Width }}" height="{{ $base.Height }}"
+    alt="{{ .Text }}"{{ with .Title }} title="{{ . | transform.HTMLEscape }}"{{ end }}
+    loading="lazy" decoding="async">
+{{- else -}}
+  {{- $attributes := merge .Attributes (dict "alt" .Text "src" $src "title" (.Title | transform.HTMLEscape) "loading" "lazy" "decoding" "async") -}}
+  <img
+    {{- range $k, $v := $attributes -}}
+      {{- if $v -}}
+        {{- printf " %s=%q" $k $v | safeHTMLAttr -}}
+      {{- end -}}
+    {{- end -}}>
+{{- end -}}
+{{- /**/ -}}
