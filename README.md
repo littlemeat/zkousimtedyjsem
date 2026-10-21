@@ -2,29 +2,39 @@
 
 Osobní blog na [zkousimtedyjsem.cz](https://zkousimtedyjsem.cz) — Hugo + téma PaperMod, hostované na GitHub Pages.
 
-## Jak napsat nový článek
+## Články se píšou v Notionu
 
-```bash
-hugo new posts/nazev-clanku/index.md
-```
+Notion databáze **Blog — články** je zdrojem článků. Složka `content/posts/` v tomto
+repozitáři je jen jejich vygenerovaný výstup — ruční úpravy se při příštím převodu
+z Notionu přepíšou.
 
-Vznikne složka `content/posts/nazev-clanku/` se souborem `index.md` — do stejné složky patří i fotky k článku. Nový článek má automaticky `draft: true`, takže se nepublikuje, dokud ho nepřepneš.
+U článku v Notionu vyplň:
 
-V hlavičce článku vyplň:
+- **Název**, **Slug**, **Datum**, **Kategorie**, **Tagy**, **Popis** a **Summary**;
+- kategorii vyber z **Pracuju / Testuju / Cestuju**;
+- obrázky jednoduše vlož do stránky; při převodu se stáhnou k článku a zmenší na
+  maximálně 2 000 px delší strany.
 
-- `categories` — jednu z **Pracuju / Testuju / Cestuju** (s velkým písmenem)
-- `description` a `summary` — krátký popis (zobrazuje se ve výpisu a ve vyhledávačích)
-- `cover` — úvodní fotka (viz komentář v šabloně)
-
-## Fotky
-
-- Fotky patří do složky článku, vkládají se přes `![popisek](fotka.jpg)`.
-- **Před nahráním fotky zmenši** na max ~2000 px delší strany (Náhled na Macu: Nástroje → Upravit velikost). Fotka pak má ~300–500 kB místo několika MB a repozitář zbytečně neroste.
+Podporované jsou nadpisy, běžné formátování textu, odkazy, seznamy, checkboxy,
+citace, oddělovače, kód, obrázky a jednoduché tabulky. Callout s ikonou `🚧` je
+soukromá poznámka: na web se nevypíše. Toggly, sloupce, videa a embedy, rovnice,
+podtržení a barvy textu se na web nepřenášejí.
 
 ## Publikování
 
-1. V článku přepni `draft: true` na `draft: false`.
-2. Commit a push do větve `main` — GitHub Actions web automaticky sestaví a nasadí (trvá ~2 minuty).
+Cílový postup je jednoduchý:
+
+1. Dokonči článek v Notionu a nastav **Stav** na **K publikaci**.
+2. Otevři uložený odkaz „Publikovat blog“ na GitHubu a klikni na **Run workflow**.
+3. GitHub Actions převede všechny připravené články, sestaví a nasadí web. Po
+   úspěšném nasazení je v Notionu označí jako **Publikováno** a doplní jejich URL.
+
+> Tento jednoklikový publikační workflow se ještě doplní. Do té doby se převod
+> provádí příkazem `python3 scripts/notion-blog.py publish <slug>`; následné
+> odeslání do větve `main` spustí stávající nasazení na GitHub Pages.
+
+Push do `main` vždy spouští sestavení a nasazení webu na produkci. Běžně trvá
+přibližně dvě minuty.
 
 ## Lokální náhled
 
@@ -34,6 +44,12 @@ hugo server -D                # -D zobrazí i drafty
 ```
 
 Web pak běží na http://localhost:1313.
+
+## Ruční Markdown (jen výjimečně)
+
+Pro jednorázový technický zásah lze založit článek příkazem
+`hugo new posts/nazev-clanku/index.md`. Nejde ale o běžný způsob psaní článků:
+pokud bude mít stejný slug článek v Notionu, další převod tento soubor přepíše.
 
 ## Affiliate odkazy
 
