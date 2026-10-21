@@ -7,14 +7,18 @@ Příkazy:
   list                              Vypíše články a jejich stav
   publish <slug|page_url> [--draft] [--mark-published]
                                     Převede článek z Notionu na Hugo bundle
+  publish-ready --output <soubor>   Převede všechny články ve stavu „K publikaci"
+  mark-published <soubor>            Označí po nasazení články ze souboru jako publikované
   selftest                          Otestuje konvertor na vestavěné fixtuře (bez API)
 
 Token: env NOTION_TOKEN, nebo soubor .notion-token v rootu repa (gitignored).
-Vyžaduje jen Python 3 stdlib + macOS `sips` na zmenšování obrázků.
+Vyžaduje Python 3. Pro zmenšování obrázků používá Pillow; na macOS funguje
+i záložní varianta přes `sips`.
 """
 
 import json
 import re
+import shutil
 import subprocess
 import sys
 import time
@@ -27,14 +31,18 @@ REPO = Path(__file__).resolve().parent.parent
 CONFIG_FILE = REPO / ".notion-blog.json"
 TOKEN_FILE = REPO / ".notion-token"
 API = "https://api.notion.com/v1"
-NOTION_VERSION = "2022-06-28"
+NOTION_VERSION = "2026-03-11"
 MAX_IMG_PX = 2000
 TITLE_LIMIT = 60   # nad 60 znaků se titulek na webu láme na tři řádky
 NOTE_EMOJI = "🚧"  # callout s touto ikonou = soukromá poznámka, nepublikuje se
 SITE_URL = "https://zkousimtedyjsem.cz"
 
 CATEGORIES = ["Pracuju", "Testuju", "Cestuju"]
-STATES = ["Píšu", "K publikaci", "Publikováno"]
+STATES = ["Píšu", "K publikaci", "Publikováno", "Chyba publikace"]
+
+
+class PublicationError(Exception):
+    """Chyba, kterou lze bezpečně zapsat k článku v Notionu."""
 
 
 # ---------- API plumbing ----------
@@ -275,19 +283,37 @@ class Converter:
 
     @staticmethod
     def shrink(path):
-        """Zmenší fotku na MAX_IMG_PX. Nikdy nezvětšuje — sips -Z umí i upscale."""
+        """Zmenší fotku bez zvětšování; funguje lokálně i na Linux runneru."""
+        try:
+            from PIL import Image
+        except ImportError:
+            Image = None
+
+        if Image:
+            with Image.open(path) as image:
+                if max(image.size) <= MAX_IMG_PX:
+                    return
+                image.thumbnail((MAX_IMG_PX, MAX_IMG_PX), Image.Resampling.LANCZOS)
+                save_args = {"optimize": True}
+                if image.format in ("JPEG", "WEBP"):
+                    save_args["quality"] = 85
+                image.save(path, format=image.format, **save_args)
+            return
+
+        # Lokální záloha pro Mac, kde Pillow ještě není nainstalované.
+        sips = shutil.which("sips")
+        if not sips:
+            raise PublicationError(
+                "Chybí Pillow pro zmenšení obrázku. Nainstaluj Pillow nebo spusť publikaci v GitHub Actions."
+            )
         probe = subprocess.run(
-            ["sips", "-g", "pixelWidth", "-g", "pixelHeight", str(path)],
-            capture_output=True, text=True,
+            [sips, "-g", "pixelWidth", "-g", "pixelHeight", str(path)],
+            capture_output=True, text=True, check=False,
         )
         dims = [int(m) for m in re.findall(r"pixel(?:Width|Height):\s*(\d+)", probe.stdout)]
-        if not dims:
-            return
-        cmd = ["sips"]
-        if max(dims) > MAX_IMG_PX:
-            cmd += ["-Z", str(MAX_IMG_PX)]
-        cmd += ["-s", "formatOptions", "85", str(path)]
-        subprocess.run(cmd, capture_output=True)
+        if dims and max(dims) > MAX_IMG_PX:
+            subprocess.run([sips, "-Z", str(MAX_IMG_PX), "-s", "formatOptions", "85", str(path)],
+                           capture_output=True, check=True)
 
 
 # ---------- front matter ----------
@@ -334,7 +360,7 @@ def cmd_init(parent_ref):
     db = api("POST", "/databases", {
         "parent": {"type": "page_id", "page_id": parent},
         "title": [rt("Blog — články")],
-        "properties": {
+        "initial_data_source": {"properties": {
             "Název": {"title": {}},
             "Slug": {"rich_text": {}},
             "Kategorie": {"select": {"options": [
@@ -343,28 +369,32 @@ def cmd_init(parent_ref):
             "Tagy": {"multi_select": {}},
             "Stav": {"select": {"options": [
                 {"name": s, "color": col} for s, col in
-                zip(STATES, ["gray", "yellow", "green"])]}},
+                zip(STATES, ["gray", "yellow", "green", "red"])]}},
             "Datum": {"date": {}},
             "Popis": {"rich_text": {}},
             "Summary": {"rich_text": {}},
             "URL": {"url": {}},
-        },
+        }},
     })
-    CONFIG_FILE.write_text(json.dumps({"database_id": db["id"]}, indent=2))
+    sources = db.get("data_sources", [])
+    if len(sources) != 1:
+        raise PublicationError("Nově vytvořená Notion databáze nemá právě jeden zdroj dat.")
+    CONFIG_FILE.write_text(json.dumps({"database_id": db["id"],
+                                       "data_source_id": sources[0]["id"]}, indent=2))
     print(f"Databáze založena: {db.get('url')}")
     cmd_sample()
 
 
 def cmd_sample():
     """Vytvoří vzorový článek v existující databázi."""
-    sample = api("POST", "/pages", sample_page(db_id()))
+    sample = api("POST", "/pages", sample_page(data_source_id()))
     print(f"Vzorový článek: {sample.get('url')}")
 
 
-def sample_page(db_id):
+def sample_page(source_id):
     img = "https://picsum.photos/id/1015/1200/700.jpg"
     return {
-        "parent": {"database_id": db_id},
+        "parent": {"type": "data_source_id", "data_source_id": source_id},
         "properties": {
             "Název": {"title": [rt("Vzorový článek — co všechno umí formátování")]},
             "Slug": {"rich_text": [rt("vzorovy-clanek")]},
@@ -444,30 +474,60 @@ def sample_page(db_id):
             {"type": "paragraph", "paragraph": {"rich_text": [
                 rt("Až budeš chtít článek vydat: přepni Stav na "),
                 rt("K publikaci", bold=True),
-                rt(" a napiš Claudovi „publishni vzorový článek“. Zbytek se stane sám.")]}},
+                rt(" a v GitHub Actions spusť workflow „Publikovat blog z Notionu“. Zbytek se stane sám.")]}},
         ],
     }
 
 
-def db_id():
+def db_config():
     if not CONFIG_FILE.exists():
         sys.exit("Chybí .notion-blog.json — spusť nejdřív: notion-blog.py init --parent <url>")
-    return json.loads(CONFIG_FILE.read_text())["database_id"]
+    return json.loads(CONFIG_FILE.read_text())
+
+
+def db_id():
+    return db_config()["database_id"]
+
+
+def data_source_id():
+    """Vrátí datový zdroj; starší konfiguraci doplní za běhu bez zápisu do repa."""
+    config = db_config()
+    if config.get("data_source_id"):
+        return config["data_source_id"]
+    database = api("GET", f"/databases/{config['database_id']}")
+    sources = database.get("data_sources", [])
+    if len(sources) != 1:
+        raise PublicationError(
+            "Databáze musí mít právě jeden data source; jeho ID ulož do .notion-blog.json."
+        )
+    return sources[0]["id"]
+
+
+def query_pages(body):
+    """Načte všechny stránky z jediného zdroje dat včetně dalších stránek výsledků."""
+    results, cursor = [], None
+    while True:
+        request = {**body, "page_size": 100}
+        if cursor:
+            request["start_cursor"] = cursor
+        data = api("POST", f"/data_sources/{data_source_id()}/query", request)
+        results += data["results"]
+        if not data.get("has_more"):
+            return results
+        cursor = data["next_cursor"]
 
 
 def find_page(ref):
     if "notion." in ref or re.fullmatch(r"[0-9a-f]{32}", ref.replace("-", "")):
         return api("GET", f"/pages/{page_id_from(ref)}")
-    res = api("POST", f"/databases/{db_id()}/query", {
-        "filter": {"property": "Slug", "rich_text": {"equals": ref}}})
-    if not res["results"]:
+    results = query_pages({"filter": {"property": "Slug", "rich_text": {"equals": ref}}})
+    if not results:
         sys.exit(f"Článek se slugem „{ref}“ v databázi není.")
-    return res["results"][0]
+    return results[0]
 
 
 def cmd_list():
-    res = api("POST", f"/databases/{db_id()}/query", {"page_size": 100})
-    for p in res["results"]:
+    for p in query_pages({}):
         props = p["properties"]
         title = rich_to_md(next(v["title"] for v in props.values() if v["type"] == "title"))
         stav = (props.get("Stav", {}).get("select") or {}).get("name", "?")
@@ -475,11 +535,51 @@ def cmd_list():
         print(f"[{stav:12}] {title}  (slug: {slug or '—'})")
 
 
-def cmd_publish(ref, draft=False, mark=False):
-    page = find_page(ref)
+def page_title(page):
+    return rich_to_md(next(p["title"] for p in page["properties"].values()
+                           if p["type"] == "title"))
+
+
+def validation_errors(page):
+    """Kontroly, které nesmějí pustit neúplný článek do produkce."""
     props = page["properties"]
-    slug = prop_text(props, "Slug") or slugify(
-        rich_to_md(next(v["title"] for v in props.values() if v["type"] == "title")))
+    errors = []
+    title = page_title(page).strip()
+    slug = prop_text(props, "Slug").strip()
+    category = (props.get("Kategorie", {}).get("select") or {}).get("name")
+    date_value = (props.get("Datum", {}).get("date") or {}).get("start")
+    if not title:
+        errors.append("chybí Název")
+    if not slug:
+        errors.append("chybí Slug")
+    elif not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", slug):
+        errors.append("Slug smí obsahovat jen malá písmena, čísla a pomlčky")
+    if category not in CATEGORIES:
+        errors.append("Kategorie musí být Pracuju, Testuju nebo Cestuju")
+    if not date_value:
+        errors.append("chybí Datum")
+    if not prop_text(props, "Popis").strip():
+        errors.append("chybí Popis")
+    if not prop_text(props, "Summary").strip():
+        errors.append("chybí Summary")
+    return errors
+
+
+def ensure_valid_page(page):
+    errors = validation_errors(page)
+    slug = prop_text(page["properties"], "Slug").strip()
+    if slug:
+        same_slug = query_pages({"filter": {"property": "Slug", "rich_text": {"equals": slug}}})
+        if len(same_slug) != 1 or same_slug[0]["id"] != page["id"]:
+            errors.append(f"Slug „{slug}“ není unikátní")
+    if errors:
+        raise PublicationError("; ".join(errors))
+
+
+def publish_page(page, draft=False):
+    ensure_valid_page(page)
+    props = page["properties"]
+    slug = prop_text(props, "Slug")
     out_dir = REPO / "content" / "posts" / slug
     out_dir.mkdir(parents=True, exist_ok=True)
     # smazat fotky z minulé publikace, ať v článku nezůstanou ty, které už v Notionu nejsou
@@ -510,11 +610,59 @@ def cmd_publish(ref, draft=False, mark=False):
 
     for w in sorted(set(conv.warnings)):
         print(f"  ⚠ {w}")
-    if mark:
-        api("PATCH", f"/pages/{page['id']}", {"properties": {
+    return {"id": page["id"], "slug": slug, "title": title}
+
+
+def mark_published(items):
+    for item in items:
+        api("PATCH", f"/pages/{item['id']}", {"properties": {
             "Stav": {"select": {"name": "Publikováno"}},
-            "URL": {"url": f"{SITE_URL}/posts/{slug}/"}}})
-        print("Stav v Notionu → Publikováno")
+            "URL": {"url": f"{SITE_URL}/posts/{item['slug']}/"}}})
+        print(f"Stav v Notionu → Publikováno: {item['title']}")
+
+
+def mark_failed(page, error):
+    """Zapíše stav, který Marie přidala do databáze; obsah chyby je v logu Actions."""
+    api("PATCH", f"/pages/{page['id']}", {"properties": {
+        "Stav": {"select": {"name": "Chyba publikace"}}}})
+    print(f"Stav v Notionu → Chyba publikace: {page_title(page)} ({error})", file=sys.stderr)
+
+
+def cmd_publish(ref, draft=False, mark=False):
+    item = publish_page(find_page(ref), draft=draft)
+    if mark:
+        mark_published([item])
+
+
+def cmd_publish_ready(output_path):
+    ready = query_pages({"filter": {"property": "Stav", "select": {"equals": "K publikaci"}}})
+    if not ready:
+        print("Žádné články ve stavu K publikaci.")
+        Path(output_path).write_text("[]\n")
+        return
+
+    published, failures = [], []
+    for page in ready:
+        try:
+            published.append(publish_page(page))
+        except Exception as error:
+            failures.append(f"{page_title(page)}: {error}")
+            try:
+                mark_failed(page, str(error))
+            except Exception as mark_error:
+                failures[-1] += f" (nepodařilo se zapsat stav chyby: {mark_error})"
+    Path(output_path).write_text(json.dumps(published, ensure_ascii=False, indent=2) + "\n")
+    if failures:
+        raise PublicationError("Publikace selhala:\n- " + "\n- ".join(failures))
+    print(f"Připraveno k nasazení: {len(published)} článků.")
+
+
+def cmd_mark_published(manifest_path):
+    items = json.loads(Path(manifest_path).read_text())
+    if not items:
+        print("Není co označit jako publikované.")
+        return
+    mark_published(items)
 
 
 # ---------- import: markdown → Notion ----------
@@ -744,7 +892,7 @@ def cmd_import(path_str, category=None):
     if fm.get("date"):
         props["Datum"] = {"date": {"start": fm["date"][:10]}}
 
-    page = api("POST", "/pages", {"parent": {"database_id": db_id()},
+    page = api("POST", "/pages", {"parent": {"type": "data_source_id", "data_source_id": data_source_id()},
                                   "properties": props, "children": blocks[:100]})
     for start in range(100, len(blocks), 100):
         api("PATCH", f"/blocks/{page['id']}/children",
@@ -859,6 +1007,22 @@ def cmd_selftest():
         sys.exit("SELFTEST FAILED (round trip)")
     print(f"markdown→Notion→markdown OK ({len(blocks)} bloků, beze změny)")
 
+    complete = {"properties": {
+        "Název": {"type": "title", "title": [{"plain_text": "Platný článek", "annotations": {}}]},
+        "Slug": {"type": "rich_text", "rich_text": [{"plain_text": "platny-clanek", "annotations": {}}]},
+        "Kategorie": {"select": {"name": "Testuju"}},
+        "Datum": {"date": {"start": "2026-10-21"}},
+        "Popis": {"type": "rich_text", "rich_text": [{"plain_text": "Popis", "annotations": {}}]},
+        "Summary": {"type": "rich_text", "rich_text": [{"plain_text": "Summary", "annotations": {}}]},
+    }}
+    if validation_errors(complete):
+        sys.exit("SELFTEST FAILED (validace platného článku)")
+    incomplete = {"properties": {**complete["properties"],
+                                   "Slug": {"type": "rich_text", "rich_text": []}}}
+    if "chybí Slug" not in validation_errors(incomplete):
+        sys.exit("SELFTEST FAILED (validace chybějícího slugu)")
+    print("validace metadat OK (2 kontroly)")
+
 
 def main():
     args = sys.argv[1:]
@@ -875,6 +1039,12 @@ def main():
         cmd_list()
     elif cmd == "publish":
         cmd_publish(args[1], draft="--draft" in args, mark="--mark-published" in args)
+    elif cmd == "publish-ready":
+        if "--output" not in args:
+            sys.exit("Použití: notion-blog.py publish-ready --output <soubor>")
+        cmd_publish_ready(args[args.index("--output") + 1])
+    elif cmd == "mark-published":
+        cmd_mark_published(args[1])
     elif cmd == "import":
         cat = args[args.index("--kategorie") + 1] if "--kategorie" in args else None
         cmd_import(args[1], category=cat)

@@ -29,9 +29,8 @@ Cílový postup je jednoduchý:
 3. GitHub Actions převede všechny připravené články, sestaví a nasadí web. Po
    úspěšném nasazení je v Notionu označí jako **Publikováno** a doplní jejich URL.
 
-> Tento jednoklikový publikační workflow se ještě doplní. Do té doby se převod
-> provádí příkazem `python3 scripts/notion-blog.py publish <slug>`; následné
-> odeslání do větve `main` spustí stávající nasazení na GitHub Pages.
+Workflow vyžaduje, aby byl v nastavení repozitáře na GitHubu uložený Secret
+`NOTION_TOKEN`. Token se nikam neukládá do repozitáře ani do výpisu workflow.
 
 Push do `main` vždy spouští sestavení a nasazení webu na produkci. Běžně trvá
 přibližně dvě minuty.

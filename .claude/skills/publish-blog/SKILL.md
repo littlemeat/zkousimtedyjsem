@@ -7,34 +7,30 @@ description: Publikace článku z Notionu na blog zkousimtedyjsem.cz. Použij, k
 
 Marie píše články v Notionu (databáze „Blog — články"), na web se dostávají skriptem
 [scripts/notion-blog.py](../../scripts/notion-blog.py). Web je Hugo + GitHub Pages,
-**push do main = nasazení na produkci**.
+ale běžné vydání provádí ruční GitHub Actions workflow **„Publikovat blog z Notionu"**.
 
 ## Postup publikace
 
-1. Token je v `.notion-token` v rootu repa (gitignored). Nikdy ho nevypisuj, neloguj
-   a neposílej. Pokud chybí, viz Setup níž — vytvořit ho musí Marie.
-2. `python3 scripts/notion-blog.py list` — přehled článků a stavů. Signál k publikaci
-   je Stav **K publikaci** (nebo Mariin přímý pokyn se slugem/názvem).
-3. `python3 scripts/notion-blog.py publish <slug>` — stáhne stránku, převede na
-   markdown, obrázky stáhne a zmenší (sips, max 2000 px) do `content/posts/<slug>/`.
-   Zapisuje `draft: false`; na zkušební převod použij `--draft`.
-4. Projdi vygenerovaný `index.md` a vypsaná varování (nepřenesené bloky) — varování
-   vždy řekni Marii.
-5. Ukaž náhled: `hugo server -D` a odkaz na `http://localhost:1313/posts/<slug>/`.
-6. **Commit + push do main až na výslovný pokyn Marie** — push nasazuje web.
-   Commituj i `.notion-blog.json` (obsahuje jen ID databáze, není tajné).
-7. Po úspěšném pushi spusť `publish <slug> --mark-published` — v Notionu přepne
-   Stav na Publikováno a doplní URL článku.
+1. Marie nastaví v Notionu u hotového článku **Stav: K publikaci**.
+2. Otevře GitHub Actions workflow „Publikovat blog z Notionu" a klikne na **Run workflow**.
+3. Workflow ověří metadata, převede všechny připravené články, sestaví web a nasadí ho.
+   Teprve po úspěšném nasazení nastaví Stav **Publikováno** a doplní URL. Pokud převod
+   nebo validace konkrétního článku selže, nastaví **Chyba publikace**.
+
+Pro technické ladění je možné použít lokální token z `.notion-token` a příkazy
+`list`, `publish <slug>` nebo `publish-ready --output <soubor>`. Token nikdy
+nevypisuj, neloguj ani neposílej. GitHub workflow používá výhradně GitHub Secret
+`NOTION_TOKEN`.
 
 ## Pravidla
 
-- Stav „K publikaci" v Notionu je signál k **převodu**, ne k pushi na web.
+- Stav „K publikaci" je jediný signál k zařazení článku do publikační fronty.
 - Do textů obsahově nezasahovat (viz memory `blog-styl-psani` a `blog-koncept-a-odlozene-veci`).
 - Nepřenáší se: toggles, sloupce, videa/embedy, rovnice, podtržení, barvy.
   Vzorový článek „vzorovy-clanek" v Notion databázi je živý katalog podporovaného formátování.
 - **Callout s ikonou 🚧 = soukromá poznámka.** Jde na web jako HTML komentář, takže
   je neviditelný. Callout s jinou ikonou se publikuje jako citace.
-- Obrázky: skript uloží do repa jeden zmenšený JPEG (max 2000 px), WebP a responzivní
+- Obrázky: skript uloží do repa jeden zmenšený obrázek (max 2000 px), WebP a responzivní
   velikosti generuje Hugo při buildu přes `layouts/_default/_markup/render-image.html`.
 - Články žijí v Notionu, `content/posts/` je jen výstup publikace. Ruční editace
   markdownu v repu se při dalším publishi přepíše — opravy patří do Notionu.
@@ -48,11 +44,11 @@ poznámkami 🚧. Lokální obrázky se nenahrávají — skript na ně upozorn�
 ## Setup (jednorázový, dělá Marie)
 
 1. Na notion.so/my-integrations vytvořit interní integraci (capabilities: Read +
-   Insert + Update content) a token uložit: v rootu repa `echo "ntn_…" > .notion-token`.
-   Token nikdy neposílat do chatu.
+   Insert + Update content). Token uložit jako GitHub Actions Secret `NOTION_TOKEN`.
+   Pro lokální ladění je možné ho uložit do `.notion-token`; token nikdy neposílat do chatu.
 2. V Notionu založit stránku „Blog" a přes ⋯ → Connections k ní připojit integraci.
 3. `python3 scripts/notion-blog.py init --parent <URL stránky Blog>` — založí databázi
-   s vlastnostmi (Název, Slug, Kategorie, Tagy, Stav, Datum, Popis, Summary, URL),
+   s vlastnostmi (Název, Slug, Kategorie, Tagy, Stav včetně „Chyba publikace", Datum, Popis, Summary, URL),
    vytvoří vzorový článek s katalogem formátování a zapíše `.notion-blog.json`.
    Příkaz `sample` vytvoří vzorový článek znovu, bez zakládání databáze.
 
