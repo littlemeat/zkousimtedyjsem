@@ -29,6 +29,14 @@ Cílový postup je jednoduchý:
 3. GitHub Actions převede všechny připravené články, sestaví a nasadí web. Po
    úspěšném nasazení je v Notionu označí jako **Publikováno** a doplní jejich URL.
 
+### Stažení článku z webu
+
+Už vydaný článek stáhneš tak, že mu v Notionu nastavíš **Stav** na **Ke stažení** a
+znovu spustíš stejný workflow. Článek se nejdřív odstraní z webu a až po úspěšném
+nasazení získá konečný stav **Staženo** a z jeho záznamu v Notionu se vymaže URL.
+Při rozpracování úprav už vydaného článku naopak nech stav **Publikováno** — veřejná
+verze zůstane viditelná.
+
 Workflow vyžaduje, aby byl v nastavení repozitáře na GitHubu uložený Secret
 `NOTION_TOKEN`. Token se nikam neukládá do repozitáře ani do výpisu workflow.
 

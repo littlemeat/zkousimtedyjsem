@@ -17,6 +17,10 @@ ale běžné vydání provádí ruční GitHub Actions workflow **„Publikovat 
    Teprve po úspěšném nasazení nastaví Stav **Publikováno** a doplní URL. Pokud převod
    nebo validace konkrétního článku selže, nastaví **Chyba publikace**.
 
+Pro stažení již vydaného článku Marie nastaví Stav **Ke stažení** a spustí stejný
+workflow. Workflow odstraní jeho Hugo bundle, nasadí změnu a pak nastaví konečný Stav
+**Staženo** a vymaže URL ze záznamu v Notionu.
+
 Pro technické ladění je možné použít lokální token z `.notion-token` a příkazy
 `list`, `publish <slug>` nebo `publish-ready --output <soubor>`. Token nikdy
 nevypisuj, neloguj ani neposílej. GitHub workflow používá výhradně GitHub Secret
@@ -24,7 +28,9 @@ nevypisuj, neloguj ani neposílej. GitHub workflow používá výhradně GitHub 
 
 ## Pravidla
 
-- Stav „K publikaci" je jediný signál k zařazení článku do publikační fronty.
+- Stav „K publikaci" zveřejní článek; stav „Ke stažení" jej stáhne z webu. Po úspěšném
+  nasazení dostane konečný stav „Staženo“. Stav „Publikováno" ponechává aktuální veřejnou
+  verzi beze změny.
 - Do textů obsahově nezasahovat (viz memory `blog-styl-psani` a `blog-koncept-a-odlozene-veci`).
 - Nepřenáší se: toggles, sloupce, videa/embedy, rovnice, podtržení, barvy.
   Vzorový článek „vzorovy-clanek" v Notion databázi je živý katalog podporovaného formátování.
@@ -48,7 +54,7 @@ poznámkami 🚧. Lokální obrázky se nenahrávají — skript na ně upozorn�
    Pro lokální ladění je možné ho uložit do `.notion-token`; token nikdy neposílat do chatu.
 2. V Notionu založit stránku „Blog" a přes ⋯ → Connections k ní připojit integraci.
 3. `python3 scripts/notion-blog.py init --parent <URL stránky Blog>` — založí databázi
-   s vlastnostmi (Název, Slug, Kategorie, Tagy, Stav včetně „Chyba publikace", Datum, Popis, Summary, URL),
+   s vlastnostmi (Název, Slug, Kategorie, Tagy, Stav včetně „Ke stažení", „Staženo" a „Chyba publikace", Datum, Popis, Summary, URL),
    vytvoří vzorový článek s katalogem formátování a zapíše `.notion-blog.json`.
    Příkaz `sample` vytvoří vzorový článek znovu, bez zakládání databáze.
 

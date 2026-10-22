@@ -7,8 +7,8 @@ Příkazy:
   list                              Vypíše články a jejich stav
   publish <slug|page_url> [--draft] [--mark-published]
                                     Převede článek z Notionu na Hugo bundle
-  publish-ready --output <soubor>   Převede všechny články ve stavu „K publikaci"
-  mark-published <soubor>            Označí po nasazení články ze souboru jako publikované
+  publish-ready --output <soubor>   Převede články „K publikaci“ a stáhne články „Ke stažení“
+  mark-deployed <soubor>             Po nasazení aktualizuje stav článků v Notionu
   selftest                          Otestuje konvertor na vestavěné fixtuře (bez API)
 
 Token: env NOTION_TOKEN, nebo soubor .notion-token v rootu repa (gitignored).
@@ -38,7 +38,7 @@ NOTE_EMOJI = "🚧"  # callout s touto ikonou = soukromá poznámka, nepublikuje
 SITE_URL = "https://zkousimtedyjsem.cz"
 
 CATEGORIES = ["Pracuju", "Testuju", "Cestuju"]
-STATES = ["Píšu", "K publikaci", "Publikováno", "Chyba publikace"]
+STATES = ["Píšu", "K publikaci", "Publikováno", "Ke stažení", "Staženo", "Chyba publikace"]
 
 
 class PublicationError(Exception):
@@ -333,6 +333,11 @@ def prop_text(props, name):
     return rich_to_md(p.get("rich_text")) if p.get("type") == "rich_text" else ""
 
 
+def prop_url(props, name):
+    p = props.get(name, {})
+    return p.get("url") if p.get("type") == "url" else None
+
+
 def front_matter(page, slug, draft):
     props = page["properties"]
     title = rich_to_md(next(
@@ -369,7 +374,7 @@ def cmd_init(parent_ref):
             "Tagy": {"multi_select": {}},
             "Stav": {"select": {"options": [
                 {"name": s, "color": col} for s, col in
-                zip(STATES, ["gray", "yellow", "green", "red"])]}},
+                zip(STATES, ["gray", "yellow", "green", "orange", "brown", "red"])]}},
             "Datum": {"date": {}},
             "Popis": {"rich_text": {}},
             "Summary": {"rich_text": {}},
@@ -610,15 +615,61 @@ def publish_page(page, draft=False):
 
     for w in sorted(set(conv.warnings)):
         print(f"  ⚠ {w}")
-    return {"id": page["id"], "slug": slug, "title": title}
+    return {"id": page["id"], "slug": slug, "title": title, "action": "published"}
 
 
-def mark_published(items):
+def withdrawal_slugs(page):
+    """Vrátí složky, které má bezpečně odstranit požadavek „Ke stažení“.
+
+    URL uchovává poslední nasazený slug. Díky tomu článek skutečně zmizí i tehdy,
+    když byl slug v Notionu omylem změněn před jeho stažením.
+    """
+    props = page["properties"]
+    slugs = {prop_text(props, "Slug").strip()}
+    url = prop_url(props, "URL") or ""
+    match = re.fullmatch(re.escape(SITE_URL) + r"/posts/([a-z0-9]+(?:-[a-z0-9]+)*)/?", url)
+    if match:
+        slugs.add(match.group(1))
+    invalid = [slug for slug in slugs if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", slug)]
+    if invalid:
+        raise PublicationError("pro stažení je potřeba platný Slug")
+    return sorted(slugs)
+
+
+def withdraw_page(page):
+    removed = []
+    for slug in withdrawal_slugs(page):
+        out_dir = REPO / "content" / "posts" / slug
+        if out_dir.is_dir():
+            shutil.rmtree(out_dir)
+            removed.append(slug)
+    title = page_title(page)
+    if removed:
+        print(f"Staženo z webu: {title} ({', '.join(removed)})")
+    else:
+        print(f"Článek už na webu není: {title}")
+    return {"id": page["id"], "slug": prop_text(page["properties"], "Slug").strip(),
+            "title": title, "action": "withdrawn"}
+
+
+def mark_deployed(items):
     for item in items:
-        api("PATCH", f"/pages/{item['id']}", {"properties": {
-            "Stav": {"select": {"name": "Publikováno"}},
-            "URL": {"url": f"{SITE_URL}/posts/{item['slug']}/"}}})
-        print(f"Stav v Notionu → Publikováno: {item['title']}")
+        if item["action"] == "published":
+            props = {
+                "Stav": {"select": {"name": "Publikováno"}},
+                "URL": {"url": f"{SITE_URL}/posts/{item['slug']}/"},
+            }
+            status = "Publikováno"
+        elif item["action"] == "withdrawn":
+            props = {
+                "Stav": {"select": {"name": "Staženo"}},
+                "URL": {"url": None},
+            }
+            status = "Staženo"
+        else:
+            raise PublicationError(f"Neznámá změna článku v manifestu: {item['action']}")
+        api("PATCH", f"/pages/{item['id']}", {"properties": props})
+        print(f"Stav v Notionu → {status}: {item['title']}")
 
 
 def mark_failed(page, error):
@@ -631,38 +682,44 @@ def mark_failed(page, error):
 def cmd_publish(ref, draft=False, mark=False):
     item = publish_page(find_page(ref), draft=draft)
     if mark:
-        mark_published([item])
+        mark_deployed([item])
 
 
 def cmd_publish_ready(output_path):
     ready = query_pages({"filter": {"property": "Stav", "select": {"equals": "K publikaci"}}})
-    if not ready:
-        print("Žádné články ve stavu K publikaci.")
+    withdrawn = query_pages({"filter": {"property": "Stav", "select": {"equals": "Ke stažení"}}})
+    if not ready and not withdrawn:
+        print("Žádné články k publikaci ani stažení.")
         Path(output_path).write_text("[]\n")
         return
 
-    published, failures = [], []
+    changes, failures = [], []
     for page in ready:
         try:
-            published.append(publish_page(page))
+            changes.append(publish_page(page))
         except Exception as error:
             failures.append(f"{page_title(page)}: {error}")
             try:
                 mark_failed(page, str(error))
             except Exception as mark_error:
                 failures[-1] += f" (nepodařilo se zapsat stav chyby: {mark_error})"
-    Path(output_path).write_text(json.dumps(published, ensure_ascii=False, indent=2) + "\n")
+    for page in withdrawn:
+        try:
+            changes.append(withdraw_page(page))
+        except Exception as error:
+            failures.append(f"{page_title(page)}: {error}")
+    Path(output_path).write_text(json.dumps(changes, ensure_ascii=False, indent=2) + "\n")
     if failures:
-        raise PublicationError("Publikace selhala:\n- " + "\n- ".join(failures))
-    print(f"Připraveno k nasazení: {len(published)} článků.")
+        raise PublicationError("Publikace nebo stažení selhalo:\n- " + "\n- ".join(failures))
+    print(f"Připraveno k nasazení: {len(changes)} změn článků.")
 
 
-def cmd_mark_published(manifest_path):
+def cmd_mark_deployed(manifest_path):
     items = json.loads(Path(manifest_path).read_text())
     if not items:
-        print("Není co označit jako publikované.")
+        print("Není co označit jako nasazené.")
         return
-    mark_published(items)
+    mark_deployed(items)
 
 
 # ---------- import: markdown → Notion ----------
@@ -1021,7 +1078,11 @@ def cmd_selftest():
                                    "Slug": {"type": "rich_text", "rich_text": []}}}
     if "chybí Slug" not in validation_errors(incomplete):
         sys.exit("SELFTEST FAILED (validace chybějícího slugu)")
-    print("validace metadat OK (2 kontroly)")
+    withdrawn = {"properties": {**complete["properties"],
+        "URL": {"type": "url", "url": f"{SITE_URL}/posts/puvodni-slug/"}}}
+    if withdrawal_slugs(withdrawn) != ["platny-clanek", "puvodni-slug"]:
+        sys.exit("SELFTEST FAILED (odvození slugu pro stažení)")
+    print("validace metadat a stažení OK (3 kontroly)")
 
 
 def main():
@@ -1043,8 +1104,8 @@ def main():
         if "--output" not in args:
             sys.exit("Použití: notion-blog.py publish-ready --output <soubor>")
         cmd_publish_ready(args[args.index("--output") + 1])
-    elif cmd == "mark-published":
-        cmd_mark_published(args[1])
+    elif cmd in ("mark-deployed", "mark-published"):
+        cmd_mark_deployed(args[1])
     elif cmd == "import":
         cat = args[args.index("--kategorie") + 1] if "--kategorie" in args else None
         cmd_import(args[1], category=cat)

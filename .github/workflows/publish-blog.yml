@@ -44,7 +44,7 @@ jobs:
       - name: Convert articles ready for publication
         env:
           NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
-        run: python3 scripts/notion-blog.py publish-ready --output "$RUNNER_TEMP/published-articles.json"
+        run: python3 scripts/notion-blog.py publish-ready --output "$RUNNER_TEMP/article-changes.json"
 
       - name: Test converter
         run: python3 scripts/notion-blog.py selftest
@@ -69,7 +69,7 @@ jobs:
           git add content .notion-blog.json
           if git diff --cached --quiet; then
             echo "published=false" >> "$GITHUB_OUTPUT"
-            echo "Žádný článek ve stavu K publikaci."
+            echo "Žádné změny článků k nasazení."
             exit 0
           fi
           git config user.name "github-actions[bot]"
@@ -84,12 +84,12 @@ jobs:
         with:
           path: ./public
 
-      - name: Upload publication manifest
+      - name: Upload article changes manifest
         if: steps.commit.outputs.published == 'true'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: published-articles
-          path: ${{ runner.temp }}/published-articles.json
+          name: article-changes
+          path: ${{ runner.temp }}/article-changes.json
           retention-days: 1
 
   deploy:
@@ -104,7 +104,7 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4.0.5
 
-  mark-published:
+  mark-deployed:
     needs: [publish-and-build, deploy]
     if: needs.publish-and-build.outputs.published == 'true' && needs.deploy.result == 'success'
     runs-on: ubuntu-latest
@@ -119,13 +119,13 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Download publication manifest
+      - name: Download article changes manifest
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
-          name: published-articles
+          name: article-changes
           path: ${{ runner.temp }}
 
-      - name: Mark articles as published in Notion
+      - name: Update article statuses in Notion
         env:
           NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
-        run: python3 scripts/notion-blog.py mark-published "$RUNNER_TEMP/published-articles.json"
+        run: python3 scripts/notion-blog.py mark-deployed "$RUNNER_TEMP/article-changes.json"
